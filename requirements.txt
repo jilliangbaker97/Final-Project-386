@@ -1,0 +1,14 @@
+# requirements.txt
+# Generated: 2026-03-31
+# Python: >=3.11 (required by pandas 3.x)
+# Install: python -m venv venv && source venv/bin/activate && pip install -r requirements.txt
+#          Windows: python -m venv venv && venv\Scripts\activate && pip install -r requirements.txt
+
+yfinance==1.2.0
+pandas==3.0.2
+numpy==2.4.4
+matplotlib==3.10.8
+seaborn==0.13.2
+beautifulsoup4==4.14.3
+requests==2.33.1
+lxml==6.0.2
