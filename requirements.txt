@@ -12,3 +12,4 @@ seaborn==0.13.2
 beautifulsoup4==4.14.3
 requests==2.33.1
 lxml==6.0.2
+pyarrow==19.0.1
