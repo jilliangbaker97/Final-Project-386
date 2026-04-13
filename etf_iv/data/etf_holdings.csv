@@ -1,0 +1,101 @@
+holding_ticker,company_name,weight_pct,etf_ticker
+NVDA,NVIDIA Corporation,7.31,VOO
+AAPL,Apple Inc.,6.63,VOO
+MSFT,Microsoft Corporation,4.96,VOO
+AMZN,"Amazon.com, Inc.",3.47,VOO
+GOOGL,Alphabet Inc.,3.08,VOO
+AVGO,Broadcom Inc.,2.56,VOO
+GOOG,Alphabet Inc.,2.46,VOO
+META,"Meta Platforms, Inc.",2.4,VOO
+TSLA,"Tesla, Inc.",1.92,VOO
+BRK.B,Berkshire Hathaway Inc.,1.57,VOO
+LLY,Eli Lilly and Company,1.42,VOO
+JPM,JPMorgan Chase & Co.,1.3,VOO
+XOM,Exxon Mobil Corporation,1.09,VOO
+JNJ,Johnson & Johnson,1.02,VOO
+WMT,Walmart Inc.,0.95,VOO
+V,Visa Inc.,0.9,VOO
+MU,"Micron Technology, Inc.",0.79,VOO
+COST,Costco Wholesale Corporation,0.76,VOO
+MA,Mastercard Incorporated,0.72,VOO
+ABBV,AbbVie Inc.,0.7,VOO
+NFLX,"Netflix, Inc.",0.69,VOO
+PG,The Procter & Gamble Company,0.66,VOO
+HD,"The Home Depot, Inc.",0.64,VOO
+GE,GE Aerospace,0.61,VOO
+CVX,Chevron Corporation,0.6,VOO
+NVDA,NVIDIA Corporation,8.66,QQQ
+AAPL,Apple Inc.,7.41,QQQ
+MSFT,Microsoft Corporation,5.37,QQQ
+AMZN,"Amazon.com, Inc.",4.86,QQQ
+GOOGL,Alphabet Inc.,3.59,QQQ
+META,"Meta Platforms, Inc.",3.59,QQQ
+WMT,Walmart Inc.,3.38,QQQ
+TSLA,"Tesla, Inc.",3.34,QQQ
+GOOG,Alphabet Inc.,3.33,QQQ
+AVGO,Broadcom Inc.,3.26,QQQ
+MU,"Micron Technology, Inc.",2.54,QQQ
+COST,Costco Wholesale Corporation,2.45,QQQ
+NFLX,"Netflix, Inc.",2.31,QQQ
+AMD,"Advanced Micro Devices, Inc.",2.06,QQQ
+CSCO,"Cisco Systems, Inc.",1.76,QQQ
+LRCX,Lam Research Corporation,1.73,QQQ
+AMAT,"Applied Materials, Inc.",1.69,QQQ
+INTC,Intel Corporation,1.65,QQQ
+PLTR,Palantir Technologies Inc.,1.6,QQQ
+LIN,Linde plc,1.25,QQQ
+KLAC,KLA Corporation,1.21,QQQ
+TMUS,"T-Mobile US, Inc.",1.16,QQQ
+PEP,"PepsiCo, Inc.",1.15,QQQ
+TXN,Texas Instruments Incorporated,1.04,QQQ
+AMGN,Amgen Inc.,1.03,QQQ
+TSLA,"Tesla, Inc.",9.54,ARKQ
+TER,"Teradyne, Inc.",9.33,ARKQ
+KTOS,"Kratos Defense & Security Solutions, Inc.",6.46,ARKQ
+AMD,"Advanced Micro Devices, Inc.",5.15,ARKQ
+RKLB,Rocket Lab Corporation,4.67,ARKQ
+DE,Deere & Company,4.56,ARKQ
+PLTR,Palantir Technologies Inc.,4.04,ARKQ
+GOOG,Alphabet Inc.,3.66,ARKQ
+LHX,"L3Harris Technologies, Inc.",3.42,ARKQ
+AVAV,"AeroVironment, Inc.",3.03,ARKQ
+TSM,Taiwan Semiconductor Manufacturing Company Limited,3.01,ARKQ
+ACHR,Archer Aviation Inc.,2.98,ARKQ
+AMZN,"Amazon.com, Inc.",2.67,ARKQ
+TRMB,Trimble Inc.,2.54,ARKQ
+CAT,Caterpillar Inc.,2.32,ARKQ
+LUNR,"Intuitive Machines, Inc.",2.24,ARKQ
+NVDA,NVIDIA Corporation,2.23,ARKQ
+BWXT,"BWX Technologies, Inc.",2.07,ARKQ
+KMTUY,Komatsu Ltd.,2.01,ARKQ
+CCJ,Cameco Corporation,1.97,ARKQ
+TLV: ESLT,Elbit Systems Ltd.,1.89,ARKQ
+SYM,Symbotic Inc.,1.87,ARKQ
+BIDU,"Baidu, Inc.",1.81,ARKQ
+IRDM,Iridium Communications Inc.,1.5,ARKQ
+JOBY,"Joby Aviation, Inc.",1.5,ARKQ
+SWX: ABBN,ABB Ltd,8.73,BOTZ
+NVDA,NVIDIA Corporation,8.32,BOTZ
+TYO: 6861,Keyence Corporation,8.25,BOTZ
+TYO: 6954,Fanuc Corporation,7.75,BOTZ
+ISRG,"Intuitive Surgical, Inc.",7.6,BOTZ
+TYO: 6273,SMC Corporation,4.58,BOTZ
+SHE: 300124,"Shenzhen Inovance Technology Co.,Ltd",4.4,BOTZ
+TYO: 6383,"Daifuku Co., Ltd.",3.45,BOTZ
+HKG: 9660,Horizon Robotics,2.6,BOTZ
+SHE: 300757,"RoboTechnik Intelligent Technology Co., LTD",2.39,BOTZ
+GOOGL,Alphabet Inc.,2.19,BOTZ
+CGNX,Cognex Corporation,2.08,BOTZ
+AVAV,"AeroVironment, Inc.",2.06,BOTZ
+HKG: 1810,Xiaomi Corporation,2.02,BOTZ
+BIDU,"Baidu, Inc.",1.9,BOTZ
+XPEV,XPeng Inc.,1.85,BOTZ
+TYO: 6506,YASKAWA Electric Corporation,1.82,BOTZ
+TSLA,"Tesla, Inc.",1.77,BOTZ
+KOSDAQ: 277810,"Rainbow Robotics Co.,Ltd.",1.75,BOTZ
+SYM,Symbotic Inc.,1.57,BOTZ
+JBTM,JBT Marel Corporation,1.56,BOTZ
+AUR,"Aurora Innovation, Inc.",1.54,BOTZ
+TYO: 6645,OMRON Corporation,1.38,BOTZ
+HKG: 9880,Ubtech Robotics Corp Ltd,1.38,BOTZ
+PATH,"UiPath, Inc.",1.06,BOTZ

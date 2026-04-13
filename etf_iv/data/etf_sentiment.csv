@@ -1,0 +1,5 @@
+etf_ticker,num_articles,sentiment_score,sentiment_label
+VOO,0,3,Neutral
+QQQ,0,3,Neutral
+ARKQ,0,3,Neutral
+BOTZ,0,3,Neutral
