@@ -2,7 +2,7 @@
 
 **STAT 386 Final Project** — Jillian Baker
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://jilliangbaker97-final-project-386.streamlit.app)
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://final-project-386.streamlit.app)
 
 ## Project Description
 
@@ -37,7 +37,7 @@ pip install -r requirements.txt
 streamlit run streamlit_app.py
 ```
 
-Or visit the [deployed app](https://jilliangbaker97-final-project-386.streamlit.app).
+Or visit the [deployed app](https://final-project-386.streamlit.app).
 
 ## Data Sources
 
