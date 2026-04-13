@@ -2,6 +2,8 @@
 
 **STAT 386 Final Project** — Jillian Baker
 
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://jilliangbaker97-final-project-386.streamlit.app)
+
 ## Project Description
 
 This project builds a custom dataset by combining ETF options chains, price histories, top-fund holdings, earnings calendars, and AI-scored news sentiment for four ETFs that span different investment styles:
@@ -17,6 +19,25 @@ The goal is to investigate two research questions:
 
 1. **Do extreme put/call ratios predict forward returns?** We compute volume- and open-interest-based PCR at the ticker and expiration level, apply threshold signals (PCR > 1.5 bearish, PCR < 0.5 bullish), and test correlations with 1-day and 5-day forward returns.
 2. **Does implied-volatility skew correlate with earnings proximity?** We measure IV skew (median OTM put IV minus median ATM put IV) for each ETF and compare it against a weight-normalized days-to-earnings metric derived from each fund's top-10 holdings.
+
+## Interactive Dashboard
+
+An interactive Streamlit app lets you explore the data without running the notebook:
+
+- **Ticker selector** — filter by VOO, QQQ, ARKQ, BOTZ
+- **IV Surface** — heatmap of implied volatility by moneyness and days-to-expiry
+- **Put/Call Ratio** — summary table and color-coded bar chart with expiration detail
+- **Holdings & Earnings** — top-25 holdings with earnings proximity highlighting
+- **Price History** — daily close with 20-day SMA and volume
+
+Run locally:
+
+```bash
+pip install -r requirements.txt
+streamlit run streamlit_app.py
+```
+
+Or visit the [deployed app](https://jilliangbaker97-final-project-386.streamlit.app).
 
 ## Data Sources
 
@@ -108,6 +129,7 @@ etf_iv/                    # Installable Python package
     earnings_dates.csv
     etf_sentiment.csv
 final_project.ipynb        # Main analysis notebook (9 sections)
+streamlit_app.py           # Interactive Streamlit dashboard
 pyproject.toml             # Package metadata and dependencies
 requirements.txt           # Pinned dependency versions
 ```
