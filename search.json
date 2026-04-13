@@ -1,0 +1,387 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "ETF Implied Volatility, Options Sentiment & Earnings Analysis",
+    "section": "",
+    "text": "This project builds a custom dataset by combining ETF options chains, price histories, top-fund holdings, earnings calendars, and AI-scored news sentiment for four ETFs spanning different investment styles: VOO, QQQ, ARKQ, and BOTZ.\nTwo research questions drive the analysis:"
+  },
+  {
+    "objectID": "index.html#deliverables",
+    "href": "index.html#deliverables",
+    "title": "ETF Implied Volatility, Options Sentiment & Earnings Analysis",
+    "section": "Deliverables",
+    "text": "Deliverables\n\n\n\nDocumentation & Analysis\n\n\n\nReference\nAPI docs for all 21 package functions\n\n\nTutorial\nInstall → load data → analyze → visualize\n\n\nTechnical Report\nMethodology, findings, and limitations\n\n\nFull Notebook\n9-section Jupyter notebook with visualizations\n\n\n\n\n\n\nProject Links\n\n\n\nStreamlit App\nInteractive dashboard (live)\n\n\nGitHub Repository\nSource code and data"
+  },
+  {
+    "objectID": "index.html#the-etf_iv-package",
+    "href": "index.html#the-etf_iv-package",
+    "title": "ETF Implied Volatility, Options Sentiment & Earnings Analysis",
+    "section": "The etf_iv Package",
+    "text": "The etf_iv Package\nThe etf_iv Python package exposes 21 functions across four categories. All collected data is bundled as CSV files so the full analysis runs offline — no network access or API keys required.\npip install -e .\nfrom etf_iv import load_options_filtered, compute_iv_skew\n\noptions = load_options_filtered()   # loads bundled data instantly\nskew    = compute_iv_skew(options)\nprint(skew[[\"atm_iv\", \"otm_iv\", \"iv_skew\"]])\n\nFunction categories\n\n\n\nCategory\nCount\nDescription\n\n\n\n\nBundled Loaders\n6\nLoad pre-collected CSV data with no network access\n\n\nLive Collection\n5\nFetch fresh data from yfinance and Anthropic\n\n\nCleaning\n6\nStandardize, filter, and enrich raw DataFrames\n\n\nAnalysis\n4\nCompute PCR, IV skew, forward returns, earnings proximity"
+  },
+  {
+    "objectID": "index.html#data-sources",
+    "href": "index.html#data-sources",
+    "title": "ETF Implied Volatility, Options Sentiment & Earnings Analysis",
+    "section": "Data Sources",
+    "text": "Data Sources\n\nyfinance — 6-month OHLCV price history and full options chains\nstockanalysis.com — Top-25 holdings and next earnings dates (scraped with robots.txt compliance)\nAnthropic Claude API — AI-scored news sentiment on a 1–5 scale"
+  },
+  {
+    "objectID": "index.html#key-findings",
+    "href": "index.html#key-findings",
+    "title": "ETF Implied Volatility, Options Sentiment & Earnings Analysis",
+    "section": "Key Findings",
+    "text": "Key Findings\n\nBroad-market ETFs (VOO, QQQ) carry structurally high put/call ratios from institutional hedging, making raw PCR a poor standalone directional signal.\nIV skew is persistently positive across all four ETFs, consistent with sustained demand for crash protection.\nETFs whose top holdings have nearer earnings tend to show steeper IV skews, offering directional support for the “earnings fear” hypothesis.\n\n\nBuilt with Python, yfinance, Streamlit, and the Anthropic Claude API."
+  },
+  {
+    "objectID": "report.html",
+    "href": "report.html",
+    "title": "Technical Report: ETF Implied Volatility, Options Sentiment & Earnings Analysis",
+    "section": "",
+    "text": "STAT 386 Final Project — Jillian Baker\n\n\n\nOptions markets encode forward-looking information that price history alone cannot capture. When traders buy puts aggressively, they are paying for downside protection — and that collective behavior shows up in two measurable signals: the put/call ratio (PCR) and implied volatility skew. This project asks whether those signals contain meaningful information about future returns and earnings risk for four ETFs that span different investment styles:\n\n\n\nETF\nFocus\n\n\n\n\nVOO\nS&P 500 broad market\n\n\nQQQ\nNasdaq-100 large-cap tech\n\n\nARKQ\nARK autonomous & robotics (actively managed)\n\n\nBOTZ\nGlobal X robotics & AI (index-based)\n\n\n\nTwo research questions guided the analysis:\n\nDo extreme put/call ratios predict short-term forward returns?\nDoes implied-volatility skew correlate with earnings proximity of top holdings?\n\n\n\n\n\nAll data was collected in a reproducible, compliance-conscious pipeline:\nPrice history — Six months of daily OHLCV data for all four ETFs via the yfinance library. Data was cleaned for duplicates, missing values, and dtype consistency.\nOptions chains — Full listed strikes across every expiration date, fetched via yfinance. Each contract was joined with the underlying spot price to compute moneyness (strike / spot). Contracts with fewer than 1 trade in volume or fewer than 10 in open interest were dropped as illiquid.\nHoldings and earnings — Top-25 holdings and their portfolio weights were scraped from stockanalysis.com for each ETF. Next earnings dates were scraped for each individual holding ticker. Scraping compliance was verified via robots.txt before any requests were made, and a 1.5-second delay was enforced between requests.\nNews sentiment — Recent headlines for each ETF were retrieved via yfinance and scored on a 1–5 scale (1 = very bearish, 5 = very bullish) using the Anthropic Claude API with structured tool-use output for consistency.\nAll collected data is bundled as CSV files inside the etf_iv package so the full analysis can be reproduced without any network access or API keys.\n\n\n\n\n\n\nThe put/call ratio was computed two ways for each ETF:\n\nAggregate PCR — total put volume divided by total call volume across all expirations, as well as the same ratio using open interest instead of volume.\nExpiration-bucketed PCR — a separate PCR computed for each individual expiration date, bucketed into near (≤30 days), mid (31–90 days), and far (&gt;90 days) horizons. This increases the number of observations beyond the four-ticker cross-section.\n\nThreshold-based signals were applied: PCR &gt; 1.5 was labeled bearish and PCR &lt; 0.5 was labeled bullish. Forward returns of 1 day and 5 days were computed from price history using percentage change with a forward shift. Pearson and Spearman correlations were then computed between PCR and forward returns.\n\n\n\nIV skew was defined as the difference between median OTM put implied volatility and median ATM put implied volatility:\n\nIV Skew = median(OTM Put IV) − median(ATM Put IV)\n\nATM puts were defined as moneyness in [0.97, 1.03] and OTM puts as moneyness in [0.85, 0.97). The analysis was restricted to options with 15–60 days to expiration to capture the earnings-window premium while avoiding ultra-short-dated noise.\nEarnings proximity was measured as a weight-normalized days-to-earnings metric: for each ETF’s top-10 holdings, the days until each holding reports earnings were averaged using the holding’s portfolio weight as the weight. This gives heavier-weighted constituents more influence on the proximity score. An OLS trend line was fit to test whether ETFs with nearer earnings exhibit steeper skews.\n\n\n\n\n\n\n\nBroad-market ETFs (VOO, QQQ) carry structurally higher put/call ratios driven by institutional hedging activity. This means that a raw PCR reading of 1.5 or higher for these funds reflects normal hedging behavior rather than genuine bearish sentiment — making PCR a poor standalone directional signal for large index ETFs.\nThematic ETFs (ARKQ, BOTZ) have smaller, less liquid options markets. Their PCR readings are more volatile and potentially more informative on a relative basis, but are also more susceptible to distortion from a small number of large trades.\nPearson and Spearman correlations between PCR and forward returns were directionally suggestive but lacked statistical power given only four cross-sectional observations. The expiration-bucketed approach increased observations but could not establish causality.\n\n\n\nIV skew was persistently positive across all four ETFs, meaning OTM puts were consistently priced above ATM puts. This is consistent with well-documented demand for crash protection in equity options markets.\nThe cross-sectional comparison of IV skew against weighted days-to-earnings provided directional support for the “earnings fear” hypothesis — ETFs whose top holdings report sooner tend to show steeper skews. However, with only four data points this relationship cannot be established statistically. A stronger test would require daily IV snapshots tracked across the earnings window for each holding.\n\n\n\n\n\n\nSingle snapshot design — yfinance provides a current options chain, not a historical time series of IV or PCR. This means we cannot observe how these signals evolved before past price moves.\nSmall cross-sectional n — With only four ETFs, all correlations are illustrative rather than statistically conclusive.\nHoldings staleness — ETF holdings are scraped at a single point in time and may not reflect intraday rebalancing.\nConfounding factors — ETFs differ in sector composition, average market cap, liquidity, and recent volatility, all of which affect options pricing independently of earnings proximity or sentiment.\n\n\n\n\n\nAll data is bundled with the package. To reproduce the full analysis:\ngit clone https://github.com/jilliangbaker97/Final-Project-386.git\ncd Final-Project-386\npython -m venv venv && source venv/bin/activate\npip install -r requirements.txt && pip install -e .\njupyter notebook final_project.ipynb\nSee the Tutorial for full setup instructions and the API Documentation for function references.\n\n\n\n\n\nStreamlit App\nGitHub Repository\nTutorial\nAPI Documentation"
+  },
+  {
+    "objectID": "report.html#motivation",
+    "href": "report.html#motivation",
+    "title": "Technical Report: ETF Implied Volatility, Options Sentiment & Earnings Analysis",
+    "section": "",
+    "text": "Options markets encode forward-looking information that price history alone cannot capture. When traders buy puts aggressively, they are paying for downside protection — and that collective behavior shows up in two measurable signals: the put/call ratio (PCR) and implied volatility skew. This project asks whether those signals contain meaningful information about future returns and earnings risk for four ETFs that span different investment styles:\n\n\n\nETF\nFocus\n\n\n\n\nVOO\nS&P 500 broad market\n\n\nQQQ\nNasdaq-100 large-cap tech\n\n\nARKQ\nARK autonomous & robotics (actively managed)\n\n\nBOTZ\nGlobal X robotics & AI (index-based)\n\n\n\nTwo research questions guided the analysis:\n\nDo extreme put/call ratios predict short-term forward returns?\nDoes implied-volatility skew correlate with earnings proximity of top holdings?"
+  },
+  {
+    "objectID": "report.html#data-collection",
+    "href": "report.html#data-collection",
+    "title": "Technical Report: ETF Implied Volatility, Options Sentiment & Earnings Analysis",
+    "section": "",
+    "text": "All data was collected in a reproducible, compliance-conscious pipeline:\nPrice history — Six months of daily OHLCV data for all four ETFs via the yfinance library. Data was cleaned for duplicates, missing values, and dtype consistency.\nOptions chains — Full listed strikes across every expiration date, fetched via yfinance. Each contract was joined with the underlying spot price to compute moneyness (strike / spot). Contracts with fewer than 1 trade in volume or fewer than 10 in open interest were dropped as illiquid.\nHoldings and earnings — Top-25 holdings and their portfolio weights were scraped from stockanalysis.com for each ETF. Next earnings dates were scraped for each individual holding ticker. Scraping compliance was verified via robots.txt before any requests were made, and a 1.5-second delay was enforced between requests.\nNews sentiment — Recent headlines for each ETF were retrieved via yfinance and scored on a 1–5 scale (1 = very bearish, 5 = very bullish) using the Anthropic Claude API with structured tool-use output for consistency.\nAll collected data is bundled as CSV files inside the etf_iv package so the full analysis can be reproduced without any network access or API keys."
+  },
+  {
+    "objectID": "report.html#methodology",
+    "href": "report.html#methodology",
+    "title": "Technical Report: ETF Implied Volatility, Options Sentiment & Earnings Analysis",
+    "section": "",
+    "text": "The put/call ratio was computed two ways for each ETF:\n\nAggregate PCR — total put volume divided by total call volume across all expirations, as well as the same ratio using open interest instead of volume.\nExpiration-bucketed PCR — a separate PCR computed for each individual expiration date, bucketed into near (≤30 days), mid (31–90 days), and far (&gt;90 days) horizons. This increases the number of observations beyond the four-ticker cross-section.\n\nThreshold-based signals were applied: PCR &gt; 1.5 was labeled bearish and PCR &lt; 0.5 was labeled bullish. Forward returns of 1 day and 5 days were computed from price history using percentage change with a forward shift. Pearson and Spearman correlations were then computed between PCR and forward returns.\n\n\n\nIV skew was defined as the difference between median OTM put implied volatility and median ATM put implied volatility:\n\nIV Skew = median(OTM Put IV) − median(ATM Put IV)\n\nATM puts were defined as moneyness in [0.97, 1.03] and OTM puts as moneyness in [0.85, 0.97). The analysis was restricted to options with 15–60 days to expiration to capture the earnings-window premium while avoiding ultra-short-dated noise.\nEarnings proximity was measured as a weight-normalized days-to-earnings metric: for each ETF’s top-10 holdings, the days until each holding reports earnings were averaged using the holding’s portfolio weight as the weight. This gives heavier-weighted constituents more influence on the proximity score. An OLS trend line was fit to test whether ETFs with nearer earnings exhibit steeper skews."
+  },
+  {
+    "objectID": "report.html#key-findings",
+    "href": "report.html#key-findings",
+    "title": "Technical Report: ETF Implied Volatility, Options Sentiment & Earnings Analysis",
+    "section": "",
+    "text": "Broad-market ETFs (VOO, QQQ) carry structurally higher put/call ratios driven by institutional hedging activity. This means that a raw PCR reading of 1.5 or higher for these funds reflects normal hedging behavior rather than genuine bearish sentiment — making PCR a poor standalone directional signal for large index ETFs.\nThematic ETFs (ARKQ, BOTZ) have smaller, less liquid options markets. Their PCR readings are more volatile and potentially more informative on a relative basis, but are also more susceptible to distortion from a small number of large trades.\nPearson and Spearman correlations between PCR and forward returns were directionally suggestive but lacked statistical power given only four cross-sectional observations. The expiration-bucketed approach increased observations but could not establish causality.\n\n\n\nIV skew was persistently positive across all four ETFs, meaning OTM puts were consistently priced above ATM puts. This is consistent with well-documented demand for crash protection in equity options markets.\nThe cross-sectional comparison of IV skew against weighted days-to-earnings provided directional support for the “earnings fear” hypothesis — ETFs whose top holdings report sooner tend to show steeper skews. However, with only four data points this relationship cannot be established statistically. A stronger test would require daily IV snapshots tracked across the earnings window for each holding."
+  },
+  {
+    "objectID": "report.html#limitations",
+    "href": "report.html#limitations",
+    "title": "Technical Report: ETF Implied Volatility, Options Sentiment & Earnings Analysis",
+    "section": "",
+    "text": "Single snapshot design — yfinance provides a current options chain, not a historical time series of IV or PCR. This means we cannot observe how these signals evolved before past price moves.\nSmall cross-sectional n — With only four ETFs, all correlations are illustrative rather than statistically conclusive.\nHoldings staleness — ETF holdings are scraped at a single point in time and may not reflect intraday rebalancing.\nConfounding factors — ETFs differ in sector composition, average market cap, liquidity, and recent volatility, all of which affect options pricing independently of earnings proximity or sentiment."
+  },
+  {
+    "objectID": "report.html#reproducibility",
+    "href": "report.html#reproducibility",
+    "title": "Technical Report: ETF Implied Volatility, Options Sentiment & Earnings Analysis",
+    "section": "",
+    "text": "All data is bundled with the package. To reproduce the full analysis:\ngit clone https://github.com/jilliangbaker97/Final-Project-386.git\ncd Final-Project-386\npython -m venv venv && source venv/bin/activate\npip install -r requirements.txt && pip install -e .\njupyter notebook final_project.ipynb\nSee the Tutorial for full setup instructions and the API Documentation for function references."
+  },
+  {
+    "objectID": "report.html#links",
+    "href": "report.html#links",
+    "title": "Technical Report: ETF Implied Volatility, Options Sentiment & Earnings Analysis",
+    "section": "",
+    "text": "Streamlit App\nGitHub Repository\nTutorial\nAPI Documentation"
+  },
+  {
+    "objectID": "reference/collection.html",
+    "href": "reference/collection.html",
+    "title": "Live Collection",
+    "section": "",
+    "text": "The five collection functions download live data from external sources. All require network access. The two sentiment functions additionally require the ANTHROPIC_API_KEY environment variable."
+  },
+  {
+    "objectID": "reference/collection.html#get_price_history",
+    "href": "reference/collection.html#get_price_history",
+    "title": "Live Collection",
+    "section": "get_price_history()",
+    "text": "get_price_history()\n\nDownload OHLCV price history for a single ticker via yfinance.\n\nParameters\n\n\n\n\n\n\n\n\n\nParameter\nType\nDefault\nDescription\n\n\n\n\nticker\nstr\nrequired\nTicker symbol (e.g. \"QQQ\", \"qqq\")\n\n\nperiod\nstr\n\"1y\"\nyfinance period string: \"1d\", \"5d\", \"1mo\", \"3mo\", \"6mo\", \"1y\", \"2y\", \"5y\", \"10y\", \"ytd\", \"max\"\n\n\n\nReturns\npd.DataFrame with a DatetimeIndex and columns:\n\n\n\nColumn\nType\nDescription\n\n\n\n\nOpen\nfloat\nOpening price\n\n\nHigh\nfloat\nDaily high\n\n\nLow\nfloat\nDaily low\n\n\nClose\nfloat\nClosing price\n\n\nVolume\nint\nTrading volume\n\n\nDividends\nfloat\nDividend amount\n\n\nStock Splits\nfloat\nSplit factor\n\n\nticker\nstr\nTicker symbol (uppercase)\n\n\n\nRaises\nValueError — if the ticker is invalid, the period string is unrecognized, or yfinance returns an empty response.\nExample\nfrom etf_iv import get_price_history\n\nprices = get_price_history(\"QQQ\", period=\"6mo\")\nprint(prices.shape)\nprint(prices[[\"Open\", \"High\", \"Low\", \"Close\", \"Volume\"]].tail(3))\n\n\n\n\n\n\nTip\n\n\n\nAfter collecting, pass the result through clean_prices() before analysis to ensure consistent column names, dtypes, and sorting."
+  },
+  {
+    "objectID": "reference/collection.html#get_options_chain",
+    "href": "reference/collection.html#get_options_chain",
+    "title": "Live Collection",
+    "section": "get_options_chain()",
+    "text": "get_options_chain()\n\nFetch the full options chain for every available expiration via yfinance.\n\nCombines calls and puts from all listed expirations into a single DataFrame, adding expiration, option_type, and ticker columns.\nParameters\n\n\n\nParameter\nType\nDefault\nDescription\n\n\n\n\nticker\nstr\nrequired\nTicker symbol (e.g. \"AAPL\", \"VOO\")\n\n\n\nReturns\npd.DataFrame — all yfinance options fields plus:\n\n\n\nColumn\nType\nDescription\n\n\n\n\nexpiration\nstr\nExpiration date (YYYY-MM-DD)\n\n\noption_type\nstr\n\"call\" or \"put\"\n\n\nticker\nstr\nTicker symbol (uppercase)\n\n\n\nRaises\nValueError — if the ticker is invalid, has no listed options, or a network failure occurs.\nExample\nfrom etf_iv import get_options_chain\n\nchain = get_options_chain(\"QQQ\")\nprint(chain.shape)\nprint(chain[[\"expiration\", \"option_type\", \"strike\", \"impliedVolatility\"]].head())\n\n# Count options by expiration\nprint(chain.groupby([\"expiration\", \"option_type\"]).size())"
+  },
+  {
+    "objectID": "reference/collection.html#get_etf_holdings",
+    "href": "reference/collection.html#get_etf_holdings",
+    "title": "Live Collection",
+    "section": "get_etf_holdings()",
+    "text": "get_etf_holdings()\n\nFetch top ETF holdings and portfolio weights from stockanalysis.com.\n\nScrapes the holdings table from https://stockanalysis.com/etf/{ticker}/holdings/. Complies with robots.txt and enforces a 1.5-second request delay.\nParameters\n\n\n\nParameter\nType\nDefault\nDescription\n\n\n\n\nticker\nstr\nrequired\nETF symbol (e.g. \"SPY\", \"QQQ\")\n\n\n\nReturns\npd.DataFrame with columns:\n\n\n\nColumn\nType\nDescription\n\n\n\n\nticker\nstr\nETF symbol\n\n\nholding_symbol\nstr\nHolding’s ticker symbol\n\n\nholding_name\nstr\nHolding’s company name\n\n\nweight_pct\nfloat\nPortfolio weight (0–100)\n\n\n\nRaises\nValueError — if the ticker is invalid, the page structure has changed, or no holdings table is found.\nExample\nfrom etf_iv import get_etf_holdings\n\nholdings = get_etf_holdings(\"QQQ\")\nprint(holdings.nlargest(5, \"weight_pct\"))\n#   ticker holding_symbol     holding_name  weight_pct\n#      QQQ           MSFT  Microsoft Corp        8.92\n#      QQQ           AAPL       Apple Inc        8.43\n#   ..."
+  },
+  {
+    "objectID": "reference/collection.html#get_etf_headlines",
+    "href": "reference/collection.html#get_etf_headlines",
+    "title": "Live Collection",
+    "section": "get_etf_headlines()",
+    "text": "get_etf_headlines()\n\nFetch recent news headlines for an ETF ticker via yfinance.\n\nParameters\n\n\n\n\n\n\n\n\n\nParameter\nType\nDefault\nDescription\n\n\n\n\nticker\nstr\nrequired\nETF symbol\n\n\nmax_articles\nint\n10\nMaximum number of headlines to return\n\n\n\nReturns\nlist[str] — headline strings, possibly empty if no recent news is available.\nExample\nfrom etf_iv import get_etf_headlines\n\nheadlines = get_etf_headlines(\"ARKQ\", max_articles=10)\nprint(f\"Fetched {len(headlines)} headlines\")\nfor h in headlines[:3]:\n    print(f\"  • {h}\")"
+  },
+  {
+    "objectID": "reference/collection.html#get_sentiment_score",
+    "href": "reference/collection.html#get_sentiment_score",
+    "title": "Live Collection",
+    "section": "get_sentiment_score()",
+    "text": "get_sentiment_score()\n\nScore a list of news headlines 1–5 using Anthropic Claude’s tool-use API.\n\nUses Claude’s structured tool-use output (via the record_sentiment tool schema) to produce a consistent integer score. Falls back to 3 (Neutral) if no headlines are provided or if the API returns no tool-use block.\n\n\n\n\n\n\nWarning\n\n\n\nThis function requires the ANTHROPIC_API_KEY environment variable:\nexport ANTHROPIC_API_KEY=\"sk-ant-...\"   # macOS/Linux\nset ANTHROPIC_API_KEY=sk-ant-...        # Windows\n\n\nParameters\n\n\n\n\n\n\n\n\n\nParameter\nType\nDefault\nDescription\n\n\n\n\nticker\nstr\nrequired\nETF symbol (used as context in the prompt)\n\n\nheadlines\nlist[str]\nrequired\nHeadline strings to score\n\n\nmodel\nstr\n\"claude-sonnet-4-6\"\nAnthropic model ID (keyword-only)\n\n\nclient\nanthropic.Anthropic \\| None\nNone\nPre-built client; creates one from env var if None (keyword-only)\n\n\n\nReturns\nint — score from 1 to 5:\n\n\n\nScore\nLabel\n\n\n\n\n1\nVery Bearish\n\n\n2\nBearish\n\n\n3\nNeutral\n\n\n4\nPositive\n\n\n5\nVery Bullish\n\n\n\nExample\nfrom etf_iv import get_etf_headlines, get_sentiment_score\n\nheadlines = get_etf_headlines(\"ARKQ\", max_articles=10)\nscore     = get_sentiment_score(\"ARKQ\", headlines)\nprint(f\"ARKQ sentiment: {score}/5\")\n# ARKQ sentiment: 4/5\n\n# Pass a pre-built client to reuse across multiple calls\nimport anthropic\nclient = anthropic.Anthropic()\nscores = {\n    ticker: get_sentiment_score(ticker, get_etf_headlines(ticker), client=client)\n    for ticker in [\"VOO\", \"QQQ\", \"ARKQ\", \"BOTZ\"]\n}\nprint(scores)"
+  },
+  {
+    "objectID": "reference/loaders.html",
+    "href": "reference/loaders.html",
+    "title": "Bundled Loaders",
+    "section": "",
+    "text": "The six loader functions read CSV files bundled inside the etf_iv/data/ package directory. They work completely offline and require no API keys. All functions return a pd.DataFrame."
+  },
+  {
+    "objectID": "reference/loaders.html#load_price_history",
+    "href": "reference/loaders.html#load_price_history",
+    "title": "Bundled Loaders",
+    "section": "load_price_history()",
+    "text": "load_price_history()\n\nLoad bundled 6-month daily OHLCV price history for VOO, QQQ, ARKQ, and BOTZ.\n\nParameters\nNone.\nReturns\npd.DataFrame with columns:\n\n\n\nColumn\nType\nDescription\n\n\n\n\nticker\nstr\nETF symbol (VOO, QQQ, ARKQ, BOTZ)\n\n\nDate\ndatetime\nTrading date (tz-naive)\n\n\nOpen\nfloat\nOpening price\n\n\nHigh\nfloat\nDaily high price\n\n\nLow\nfloat\nDaily low price\n\n\nClose\nfloat\nClosing price\n\n\nVolume\nint\nTrading volume\n\n\n\nExample\nfrom etf_iv import load_price_history\n\nprices = load_price_history()\nprint(prices.shape)       # (504, 7)  — 4 tickers × ~126 trading days\nprint(prices.dtypes)\nprint(prices.head())\n#   ticker       Date    Open    High     Low   Close    Volume\n# 0   ARKQ 2024-10-01  ..."
+  },
+  {
+    "objectID": "reference/loaders.html#load_options_chain",
+    "href": "reference/loaders.html#load_options_chain",
+    "title": "Bundled Loaders",
+    "section": "load_options_chain()",
+    "text": "load_options_chain()\n\nLoad the full bundled options chain across all listed expirations (cleaned).\n\nParameters\nNone.\nReturns\npd.DataFrame with columns:\n\n\n\nColumn\nType\nDescription\n\n\n\n\nticker\nstr\nETF symbol\n\n\nexpiration\nstr\nExpiration date (YYYY-MM-DD)\n\n\ncontractType\nstr\n\"call\" or \"put\"\n\n\nstrike\nfloat\nStrike price\n\n\nbid\nfloat\nBid price\n\n\nask\nfloat\nAsk price\n\n\nvolume\nfloat\nContracts traded today\n\n\nopenInterest\nfloat\nOpen interest\n\n\nimpliedVolatility\nfloat\nImplied volatility (annualized)\n\n\n\n\n\n\n\n\n\nTip\n\n\n\nFor most analysis use load_options_filtered(), which removes illiquid contracts and adds spot_price, moneyness, and dte.\n\n\nExample\nfrom etf_iv import load_options_chain\n\nchain = load_options_chain()\nprint(chain.shape)\nprint(chain[\"contractType\"].value_counts())\n# call    ...\n# put     ..."
+  },
+  {
+    "objectID": "reference/loaders.html#load_options_filtered",
+    "href": "reference/loaders.html#load_options_filtered",
+    "title": "Bundled Loaders",
+    "section": "load_options_filtered()",
+    "text": "load_options_filtered()\n\nLoad the liquidity-filtered options chain with spot price, moneyness, and DTE.\n\nContracts are filtered to volume &gt;= 1 and openInterest &gt;= 10.\nParameters\nNone.\nReturns\npd.DataFrame — all columns from load_options_chain() plus:\n\n\n\nColumn\nType\nDescription\n\n\n\n\nspot_price\nfloat\nUnderlying close price on collection date\n\n\nmoneyness\nfloat\nStrike / spot (1.0 = at-the-money)\n\n\ndte\nint\nCalendar days to expiration from collection date\n\n\n\nExample\nfrom etf_iv import load_options_filtered\n\noptions = load_options_filtered()\nprint(options.shape)    # smaller than full chain — illiquid contracts removed\n\n# Inspect moneyness distribution\nprint(options[\"moneyness\"].describe())\n# count    ...\n# mean     ~1.0 (centered at ATM)\n# ...\n\n# Filter to near-the-money puts\natm_puts = options[\n    (options[\"contractType\"] == \"put\") &\n    (options[\"moneyness\"].between(0.95, 1.05))\n]"
+  },
+  {
+    "objectID": "reference/loaders.html#load_etf_holdings",
+    "href": "reference/loaders.html#load_etf_holdings",
+    "title": "Bundled Loaders",
+    "section": "load_etf_holdings()",
+    "text": "load_etf_holdings()\n\nLoad bundled top-25 holdings and portfolio weights for each ETF, scraped from stockanalysis.com.\n\nParameters\nNone.\nReturns\npd.DataFrame with columns:\n\n\n\nColumn\nType\nDescription\n\n\n\n\nholding_ticker\nstr\nHolding’s stock symbol\n\n\ncompany_name\nstr\nHolding’s company name\n\n\nweight_pct\nfloat\nPortfolio weight (0–100)\n\n\netf_ticker\nstr\nParent ETF symbol\n\n\n\nExample\nfrom etf_iv import load_etf_holdings\n\nholdings = load_etf_holdings()\n\n# Top 5 holdings in QQQ by weight\nqqq = holdings[holdings[\"etf_ticker\"] == \"QQQ\"].nlargest(5, \"weight_pct\")\nprint(qqq[[\"holding_ticker\", \"company_name\", \"weight_pct\"]])\n#   holding_ticker         company_name  weight_pct\n#   MSFT            Microsoft Corp         8.92\n#   AAPL            Apple Inc              8.43\n#   ..."
+  },
+  {
+    "objectID": "reference/loaders.html#load_earnings_dates",
+    "href": "reference/loaders.html#load_earnings_dates",
+    "title": "Bundled Loaders",
+    "section": "load_earnings_dates()",
+    "text": "load_earnings_dates()\n\nLoad bundled next-earnings dates for the top holdings of each ETF.\n\nParameters\nNone.\nReturns\npd.DataFrame with columns:\n\n\n\n\n\n\n\n\nColumn\nType\nDescription\n\n\n\n\nholding_ticker\nstr\nStock symbol of the holding\n\n\netf_ticker\nstr\nParent ETF symbol\n\n\nearnings_date\ndatetime\nNext scheduled earnings date (NaT if unavailable)\n\n\n\nExample\nfrom etf_iv import load_earnings_dates\nimport pandas as pd\n\nearnings = load_earnings_dates()\n\n# Holdings with earnings within the next 30 days\ntoday = pd.Timestamp.today()\nsoon  = earnings[earnings[\"earnings_date\"] &lt;= today + pd.Timedelta(days=30)]\nprint(soon.sort_values(\"earnings_date\"))"
+  },
+  {
+    "objectID": "reference/loaders.html#load_etf_sentiment",
+    "href": "reference/loaders.html#load_etf_sentiment",
+    "title": "Bundled Loaders",
+    "section": "load_etf_sentiment()",
+    "text": "load_etf_sentiment()\n\nLoad bundled Anthropic Claude news-sentiment scores for each ETF.\n\nScores were computed with get_sentiment_score() over the top 10 recent headlines per ETF. The 1–5 scale maps to: 1 = Very Bearish, 2 = Bearish, 3 = Neutral, 4 = Positive, 5 = Very Bullish.\nParameters\nNone.\nReturns\npd.DataFrame with columns:\n\n\n\nColumn\nType\nDescription\n\n\n\n\netf_ticker\nstr\nETF symbol\n\n\nnum_articles\nint\nNumber of headlines scored\n\n\nsentiment_score\nint\n1–5 composite score\n\n\nsentiment_label\nstr\nHuman-readable label for the score\n\n\n\nExample\nfrom etf_iv import load_etf_sentiment\n\nsentiment = load_etf_sentiment()\nprint(sentiment)\n#   etf_ticker  num_articles  sentiment_score sentiment_label\n# 0        VOO            10                4        Positive\n# 1        QQQ            10                4        Positive\n# 2       ARKQ            10                3         Neutral\n# 3       BOTZ            10                3         Neutral"
+  },
+  {
+    "objectID": "reference/analysis.html",
+    "href": "reference/analysis.html",
+    "title": "Analysis",
+    "section": "",
+    "text": "The four analysis functions derive metrics from cleaned DataFrames. They perform no data fetching or cleaning — pass DataFrames from the Bundled Loaders or the Cleaning module."
+  },
+  {
+    "objectID": "reference/analysis.html#compute_put_call_ratios",
+    "href": "reference/analysis.html#compute_put_call_ratios",
+    "title": "Analysis",
+    "section": "compute_put_call_ratios()",
+    "text": "compute_put_call_ratios()\n\nCompute put/call ratios aggregated by ticker and by ticker-expiration.\n\nReturns two DataFrames: one at the ticker level and one broken out by expiration. The expiration-level DataFrame also classifies each expiration into a horizon bucket (near, mid, far).\nParameters\n\n\n\n\n\n\n\n\nParameter\nType\nDescription\n\n\n\n\noptions\npd.DataFrame\nCleaned options with ticker, expiration, contractType, volume, openInterest\n\n\n\nReturns\nA tuple[pd.DataFrame, pd.DataFrame]:\npcr_ticker — indexed by ticker:\n\n\n\nColumn\nType\nDescription\n\n\n\n\npcr_volume\nfloat\nPut volume / Call volume\n\n\npcr_oi\nfloat\nPut open interest / Call open interest\n\n\nput_volume\nfloat\nTotal put volume\n\n\ncall_volume\nfloat\nTotal call volume\n\n\nput_oi\nfloat\nTotal put open interest\n\n\ncall_oi\nfloat\nTotal call open interest\n\n\n\npcr_expiry — one row per (ticker, expiration):\n\n\n\n\n\n\n\n\nColumn\nType\nDescription\n\n\n\n\nticker\nstr\nETF symbol\n\n\nexpiration\nstr\nExpiration date\n\n\npcr_volume\nfloat\nPut/call volume ratio\n\n\npcr_oi\nfloat\nPut/call OI ratio\n\n\ndays_to_exp\nint\nDays from today to expiration\n\n\nhorizon\nstr\n\"near\" (≤30d), \"mid\" (31–90d), or \"far\" (&gt;90d)\n\n\n\nExample\nfrom etf_iv import load_options_filtered, compute_put_call_ratios\n\noptions = load_options_filtered()\npcr_ticker, pcr_expiry = compute_put_call_ratios(options)\n\nprint(pcr_ticker[[\"pcr_volume\", \"pcr_oi\"]])\n#         pcr_volume    pcr_oi\n# ticker\n# ARKQ      0.823456  0.912345\n# BOTZ      1.123456  1.234567\n# QQQ       1.456789  1.567890\n# VOO       1.789012  1.890123\n\n# Near-term expirations only\nnear = pcr_expiry[pcr_expiry[\"horizon\"] == \"near\"]\nprint(near[[\"ticker\", \"expiration\", \"pcr_volume\"]].head())\n\n\n\n\n\n\nTip\n\n\n\nPCR &gt; 1.5 is often used as a bearish signal (excess put buying relative to calls). PCR &lt; 0.5 is treated as a bullish signal. However, broad-market ETFs like VOO and QQQ carry structurally elevated PCR from institutional hedging, making raw thresholds less reliable for those instruments."
+  },
+  {
+    "objectID": "reference/analysis.html#compute_forward_returns",
+    "href": "reference/analysis.html#compute_forward_returns",
+    "title": "Analysis",
+    "section": "compute_forward_returns()",
+    "text": "compute_forward_returns()\n\nAdd N-day forward return columns to a price-history DataFrame.\n\nFor each trading-day row, computes the percentage change in Close N days forward. The last N rows for each ticker will have NaN forward returns (no future prices available).\nParameters\n\n\n\n\n\n\n\n\n\nParameter\nType\nDefault\nDescription\n\n\n\n\nprices\npd.DataFrame\nrequired\nCleaned prices with ticker, Date, Close\n\n\nwindows\nlist[int] \\| None\n[1, 5]\nList of trading-day windows to compute\n\n\n\nReturns\npd.DataFrame — copy of prices with one added column per window: fwd_1d, fwd_5d, etc. (percentage change, e.g. 0.012 = +1.2%).\nExample\nfrom etf_iv import load_price_history, compute_forward_returns\n\nprices  = load_price_history()\nreturns = compute_forward_returns(prices, windows=[1, 5, 10])\n\nprint(returns[[\"ticker\", \"Date\", \"Close\", \"fwd_1d\", \"fwd_5d\", \"fwd_10d\"]].tail(10))\n\n# Check correlation between VOO 1-day returns and itself (sanity check)\nvoo = returns[returns[\"ticker\"] == \"VOO\"].dropna(subset=[\"fwd_1d\"])\nprint(voo[[\"fwd_1d\", \"fwd_5d\"]].corr())"
+  },
+  {
+    "objectID": "reference/analysis.html#compute_iv_skew",
+    "href": "reference/analysis.html#compute_iv_skew",
+    "title": "Analysis",
+    "section": "compute_iv_skew()",
+    "text": "compute_iv_skew()\n\nCompute IV skew as median OTM put IV minus median ATM put IV for each ETF.\n\nFilters to put options within the specified DTE window, then computes the median implied volatility for ATM and OTM bands separately. The difference (otm_iv - atm_iv) is the skew — positive values mean OTM puts are priced higher than ATM puts (the typical “crash protection” premium).\nParameters\n\n\n\n\n\n\n\n\n\nParameter\nType\nDefault\nDescription\n\n\n\n\noptions\npd.DataFrame\nrequired\nCleaned options with ticker, contractType, impliedVolatility, moneyness, dte\n\n\ndte_range\ntuple[int, int]\n(15, 60)\n(min_dte, max_dte) — inclusive DTE window for puts\n\n\natm_range\ntuple[float, float]\n(0.97, 1.03)\n(lo, hi) moneyness band for ATM puts\n\n\notm_range\ntuple[float, float]\n(0.85, 0.97)\n(lo, hi) moneyness band for OTM puts\n\n\n\nReturns\npd.DataFrame indexed by ticker:\n\n\n\nColumn\nType\nDescription\n\n\n\n\natm_iv\nfloat\nMedian implied volatility of ATM puts\n\n\notm_iv\nfloat\nMedian implied volatility of OTM puts\n\n\niv_skew\nfloat\notm_iv - atm_iv (positive = typical skew)\n\n\nn_atm\nint\nNumber of ATM put contracts in the DTE window\n\n\nn_otm\nint\nNumber of OTM put contracts in the DTE window\n\n\n\nExample\nfrom etf_iv import load_options_filtered, compute_iv_skew\n\noptions = load_options_filtered()\nskew    = compute_iv_skew(options)\n\nprint(skew)\n#         atm_iv    otm_iv  iv_skew  n_atm  n_otm\n# ticker\n# ARKQ    0.2345    0.3456   0.1111     12     28\n# BOTZ    0.1987    0.2876   0.0889      8     19\n# QQQ     0.1654    0.2345   0.0691     45    112\n# VOO     0.1432    0.2123   0.0691     38     97\n\n# Wider OTM band\ndeep_skew = compute_iv_skew(options, otm_range=(0.75, 0.95))\nprint(deep_skew[[\"atm_iv\", \"otm_iv\", \"iv_skew\"]])\n\n\n\n\n\n\nNote\n\n\n\nA persistently positive iv_skew (OTM puts priced above ATM puts) is well-documented and reflects the market’s demand for downside crash protection. Thematic ETFs (ARKQ, BOTZ) tend to show steeper skew due to higher idiosyncratic risk and lower liquidity in their options markets."
+  },
+  {
+    "objectID": "reference/analysis.html#compute_earnings_proximity",
+    "href": "reference/analysis.html#compute_earnings_proximity",
+    "title": "Analysis",
+    "section": "compute_earnings_proximity()",
+    "text": "compute_earnings_proximity()\n\nCompute a weight-normalized “days until earnings” metric for each ETF.\n\nFor each ETF, takes the top-N holdings by weight, looks up their next earnings dates, and computes a weighted average of days-to-earnings. Also reports the fraction of holdings reporting within 30 and 60 days.\nParameters\n\n\n\n\n\n\n\n\n\nParameter\nType\nDefault\nDescription\n\n\n\n\nholdings\npd.DataFrame\nrequired\nCleaned holdings with holding_ticker, etf_ticker, weight_pct\n\n\nearnings\npd.DataFrame\nrequired\nCleaned earnings with holding_ticker, etf_ticker, earnings_date\n\n\ntoday\npd.Timestamp \\| None\nNone\nReference date; defaults to pd.Timestamp.today()\n\n\ntop_n\nint\n10\nNumber of largest holdings (by weight) per ETF to include\n\n\n\nReturns\npd.DataFrame indexed by ticker (ETF symbol):\n\n\n\n\n\n\n\n\nColumn\nType\nDescription\n\n\n\n\nweighted_dte_earnings\nfloat\nWeight-normalized days until next earnings\n\n\npct_within_30d\nfloat\nFraction of top-N holdings reporting within 30 days\n\n\npct_within_60d\nfloat\nFraction of top-N holdings reporting within 60 days\n\n\nn_holdings_with_dates\nint\nHoldings with a valid earnings date\n\n\n\nExample\nfrom etf_iv import (\n    load_etf_holdings, load_earnings_dates,\n    compute_earnings_proximity,\n)\nimport pandas as pd\n\nholdings = load_etf_holdings()\nearnings = load_earnings_dates()\n\nproximity = compute_earnings_proximity(holdings, earnings, top_n=10)\nprint(proximity.sort_values(\"weighted_dte_earnings\"))\n#         weighted_dte_earnings  pct_within_30d  pct_within_60d  n_holdings_with_dates\n# ticker\n# ARKQ                     23.5            0.40            0.80                      9\n# BOTZ                     31.2            0.30            0.60                      8\n# QQQ                      45.8            0.20            0.50                     10\n# VOO                      52.1            0.15            0.40                     10\n\n# Use a fixed reference date for reproducible results\nproximity_fixed = compute_earnings_proximity(\n    holdings, earnings, today=pd.Timestamp(\"2025-04-01\"), top_n=10\n)\n\n\n\n\n\n\nTip\n\n\n\nCombine this with compute_iv_skew() to test the “earnings fear” hypothesis: ETFs whose top holdings have nearer upcoming earnings should, in theory, show steeper IV skew as the market prices in event risk."
+  },
+  {
+    "objectID": "reference/index.html",
+    "href": "reference/index.html",
+    "title": "API Reference",
+    "section": "",
+    "text": "The etf_iv package exposes 21 functions organized into four modules. Every function accepts and returns pd.DataFrame objects and raises ValueError on invalid input."
+  },
+  {
+    "objectID": "reference/index.html#bundled-loaders",
+    "href": "reference/index.html#bundled-loaders",
+    "title": "API Reference",
+    "section": "Bundled Loaders",
+    "text": "Bundled Loaders\nLoad pre-collected CSV data bundled with the package. Works completely offline — no network access or API keys required.\nFull reference →\n\n\n\nFunction\nReturns\nDescription\n\n\n\n\nload_price_history()\nDataFrame\n6-month OHLCV for VOO, QQQ, ARKQ, BOTZ\n\n\nload_options_chain()\nDataFrame\nFull options chain (all expirations, cleaned)\n\n\nload_options_filtered()\nDataFrame\nLiquidity-filtered options with spot and moneyness\n\n\nload_etf_holdings()\nDataFrame\nTop-25 holdings per ETF\n\n\nload_earnings_dates()\nDataFrame\nNext earnings dates for ETF holdings\n\n\nload_etf_sentiment()\nDataFrame\nClaude-scored news sentiment (1–5 scale)"
+  },
+  {
+    "objectID": "reference/index.html#live-collection",
+    "href": "reference/index.html#live-collection",
+    "title": "API Reference",
+    "section": "Live Collection",
+    "text": "Live Collection\nFetch fresh data from yfinance, stockanalysis.com, or the Anthropic API. Requires network access; sentiment functions additionally require ANTHROPIC_API_KEY.\nFull reference →\n\n\n\nFunction\nReturns\nDescription\n\n\n\n\nget_price_history(ticker, period)\nDataFrame\nDownload OHLCV for a single ticker\n\n\nget_options_chain(ticker)\nDataFrame\nFetch all listed options across every expiration\n\n\nget_etf_holdings(ticker)\nDataFrame\nScrape top holdings and weights\n\n\nget_etf_headlines(ticker, max_articles)\nlist[str]\nFetch recent news headlines via yfinance\n\n\nget_sentiment_score(ticker, headlines)\nint\nScore headlines 1–5 with Claude tool use"
+  },
+  {
+    "objectID": "reference/index.html#cleaning",
+    "href": "reference/index.html#cleaning",
+    "title": "API Reference",
+    "section": "Cleaning",
+    "text": "Cleaning\nStandardize, filter, and enrich raw DataFrames before analysis. All functions return a cleaned copy without mutating the input.\nFull reference →\n\n\n\nFunction\nReturns\nDescription\n\n\n\n\nclean_prices(df)\nDataFrame\nStandardize raw price-history DataFrame\n\n\nclean_options(df)\nDataFrame\nStandardize raw options chain\n\n\nfilter_liquidity(df, min_volume, min_open_interest)\nDataFrame\nRemove illiquid option contracts\n\n\nadd_spot_and_moneyness(options, prices)\nDataFrame\nMerge spot price; compute moneyness and DTE\n\n\nclean_holdings(df)\nDataFrame\nNormalize holdings column names and types\n\n\nclean_earnings(df)\nDataFrame\nParse and filter earnings dates"
+  },
+  {
+    "objectID": "reference/index.html#analysis",
+    "href": "reference/index.html#analysis",
+    "title": "API Reference",
+    "section": "Analysis",
+    "text": "Analysis\nCompute derived metrics from cleaned DataFrames. No raw fetching or cleaning — pass cleaned DataFrames from the loaders or cleaning module.\nFull reference →\n\n\n\nFunction\nReturns\nDescription\n\n\n\n\ncompute_put_call_ratios(options)\ntuple[DataFrame, DataFrame]\nPCR by ticker and by ticker-expiration\n\n\ncompute_forward_returns(prices, windows)\nDataFrame\nAdd N-day forward return columns\n\n\ncompute_iv_skew(options, dte_range, atm_range, otm_range)\nDataFrame\nIV skew = OTM put IV − ATM put IV\n\n\ncompute_earnings_proximity(holdings, earnings, today, top_n)\nDataFrame\nWeight-normalized days until earnings"
+  },
+  {
+    "objectID": "reference/cleaning.html",
+    "href": "reference/cleaning.html",
+    "title": "Cleaning",
+    "section": "",
+    "text": "The six cleaning functions transform raw collected DataFrames into analysis-ready form. Every function returns a cleaned copy — the input DataFrame is never mutated."
+  },
+  {
+    "objectID": "reference/cleaning.html#clean_prices",
+    "href": "reference/cleaning.html#clean_prices",
+    "title": "Cleaning",
+    "section": "clean_prices()",
+    "text": "clean_prices()\n\nStandardize a raw price-history DataFrame from get_price_history() or a CSV.\n\nParameters\n\n\n\n\n\n\n\n\nParameter\nType\nDescription\n\n\n\n\ndf\npd.DataFrame\nRaw price DataFrame; must contain ticker, Close, and either a Date column or a DatetimeIndex\n\n\n\nReturns\npd.DataFrame with columns ticker, Date, Open, High, Low, Close, Volume — consistent dtypes, tz-naive dates, sorted by [ticker, Date].\nRaises\nValueError — if df is empty or missing essential columns (ticker, Close).\nExample\nfrom etf_iv import get_price_history, clean_prices\n\nraw    = get_price_history(\"QQQ\", period=\"6mo\")\nprices = clean_prices(raw)\n\nprint(prices.dtypes)\n# ticker            object\n# Date      datetime64[ns]\n# Open             float64\n# High             float64\n# Low              float64\n# Close            float64\n# Volume             int64\n\nprint(prices.head())"
+  },
+  {
+    "objectID": "reference/cleaning.html#clean_options",
+    "href": "reference/cleaning.html#clean_options",
+    "title": "Cleaning",
+    "section": "clean_options()",
+    "text": "clean_options()\n\nStandardize a raw options chain from get_options_chain().\n\nRenames option_type to contractType if present, enforces canonical column names and dtypes, drops rows missing strike or impliedVolatility, and sorts by [ticker, expiration, contractType, strike].\nParameters\n\n\n\nParameter\nType\nDescription\n\n\n\n\ndf\npd.DataFrame\nRaw options chain from get_options_chain()\n\n\n\nReturns\npd.DataFrame with canonical columns: ticker, expiration, contractType, strike, bid, ask, volume, openInterest, impliedVolatility, plus any additional yfinance fields.\nRaises\nValueError — if df is empty or missing required columns.\nExample\nfrom etf_iv import get_options_chain, clean_options\n\nraw     = get_options_chain(\"VOO\")\noptions = clean_options(raw)\n\nprint(options[[\"ticker\", \"expiration\", \"contractType\", \"strike\", \"impliedVolatility\"]].head())\nprint(f\"Rows before cleaning: {len(raw)}, after: {len(options)}\")"
+  },
+  {
+    "objectID": "reference/cleaning.html#filter_liquidity",
+    "href": "reference/cleaning.html#filter_liquidity",
+    "title": "Cleaning",
+    "section": "filter_liquidity()",
+    "text": "filter_liquidity()\n\nRemove illiquid option contracts that fall below volume or open-interest thresholds.\n\nParameters\n\n\n\n\n\n\n\n\n\nParameter\nType\nDefault\nDescription\n\n\n\n\ndf\npd.DataFrame\nrequired\nCleaned options DataFrame with volume and openInterest columns\n\n\nmin_volume\nint\n1\nMinimum daily volume (inclusive)\n\n\nmin_open_interest\nint\n10\nMinimum open interest (inclusive)\n\n\n\nReturns\npd.DataFrame — filtered copy with reset index.\nExample\nfrom etf_iv import get_options_chain, clean_options, filter_liquidity\n\nchain    = clean_options(get_options_chain(\"QQQ\"))\nfiltered = filter_liquidity(chain, min_volume=1, min_open_interest=10)\n\nprint(f\"Contracts before: {len(chain)}, after filtering: {len(filtered)}\")\nprint(filtered[\"volume\"].min())   # &gt;= 1\nprint(filtered[\"openInterest\"].min())  # &gt;= 10"
+  },
+  {
+    "objectID": "reference/cleaning.html#add_spot_and_moneyness",
+    "href": "reference/cleaning.html#add_spot_and_moneyness",
+    "title": "Cleaning",
+    "section": "add_spot_and_moneyness()",
+    "text": "add_spot_and_moneyness()\n\nMerge the most recent spot price into an options DataFrame and compute moneyness and DTE.\n\nFor each option contract, the function looks up the latest Close for its ticker from prices, attaches it as spot_price, then computes:\n\nmoneyness = strike / spot_price (1.0 = at-the-money, &lt;1 = OTM call/ITM put, &gt;1 = ITM call/OTM put)\ndte = calendar days from today to expiration\n\nParameters\n\n\n\n\n\n\n\n\nParameter\nType\nDescription\n\n\n\n\noptions\npd.DataFrame\nCleaned options with ticker, strike, expiration\n\n\nprices\npd.DataFrame\nCleaned prices with ticker, Date, Close\n\n\n\nReturns\npd.DataFrame — options with three added columns:\n\n\n\nColumn\nType\nDescription\n\n\n\n\nspot_price\nfloat\nLatest closing price for the ticker\n\n\nmoneyness\nfloat\nstrike / spot_price\n\n\ndte\nint\nCalendar days from today to expiration\n\n\n\nRaises\nValueError — if any ticker in options has no matching price rows in prices.\nExample\nfrom etf_iv import (\n    get_price_history, get_options_chain,\n    clean_prices, clean_options, filter_liquidity, add_spot_and_moneyness,\n)\n\nprices  = clean_prices(get_price_history(\"QQQ\", period=\"6mo\"))\noptions = filter_liquidity(clean_options(get_options_chain(\"QQQ\")))\nenriched = add_spot_and_moneyness(options, prices)\n\nprint(enriched[[\"strike\", \"spot_price\", \"moneyness\", \"dte\"]].head())\n#    strike  spot_price  moneyness  dte\n#     400.0      480.5   0.8325    12\n#     420.0      480.5   0.8741    12\n#     ...\n\n# Near-the-money puts expiring in 15–60 days\natm_puts = enriched[\n    (enriched[\"contractType\"] == \"put\") &\n    (enriched[\"moneyness\"].between(0.97, 1.03)) &\n    (enriched[\"dte\"].between(15, 60))\n]"
+  },
+  {
+    "objectID": "reference/cleaning.html#clean_holdings",
+    "href": "reference/cleaning.html#clean_holdings",
+    "title": "Cleaning",
+    "section": "clean_holdings()",
+    "text": "clean_holdings()\n\nNormalize holdings column names and types, handling both package and notebook naming conventions.\n\nAccepts either holding_symbol/ticker (from get_etf_holdings()) or holding_ticker/etf_ticker naming (from CSV), and normalizes to a consistent schema.\nParameters\n\n\n\n\n\n\n\n\nParameter\nType\nDescription\n\n\n\n\ndf\npd.DataFrame\nRaw holdings DataFrame from get_etf_holdings() or a CSV\n\n\n\nReturns\npd.DataFrame with normalized columns:\n\n\n\nColumn\nType\nDescription\n\n\n\n\nholding_ticker\nstr\nHolding’s stock symbol\n\n\netf_ticker\nstr\nParent ETF symbol\n\n\nholding_name\nstr\nCompany name (if present)\n\n\nweight_pct\nfloat\nPortfolio weight (0–100)\n\n\n\nRaises\nValueError — if df is empty.\nExample\nfrom etf_iv import get_etf_holdings, clean_holdings\n\nraw      = get_etf_holdings(\"BOTZ\")\nholdings = clean_holdings(raw)\n\nprint(holdings.dtypes)\n# holding_ticker     object\n# etf_ticker         object\n# holding_name       object\n# weight_pct        float64"
+  },
+  {
+    "objectID": "reference/cleaning.html#clean_earnings",
+    "href": "reference/cleaning.html#clean_earnings",
+    "title": "Cleaning",
+    "section": "clean_earnings()",
+    "text": "clean_earnings()\n\nParse earnings date strings and filter out exchange-prefixed tickers.\n\nRemoves tickers with exchange prefixes (containing : or /) that represent non-US-listed securities. Parses earnings_date strings to datetime; unparseable values become NaT (kept in output).\nParameters\n\n\n\n\n\n\n\n\nParameter\nType\nDescription\n\n\n\n\ndf\npd.DataFrame\nRaw earnings DataFrame; must contain holding_ticker and earnings_date\n\n\n\nReturns\npd.DataFrame — exchange-prefixed tickers removed; earnings_date cast to datetime64[ns] (with NaT for unparseable values).\nRaises\nValueError — if df is empty.\nExample\nfrom etf_iv import clean_earnings\nimport pandas as pd\n\nraw = pd.DataFrame({\n    \"holding_ticker\": [\"AAPL\", \"XLON:BP\", \"MSFT\", \"TSX:RY\"],\n    \"etf_ticker\":     [\"QQQ\",   \"BOTZ\",  \"QQQ\",   \"BOTZ\"],\n    \"earnings_date\":  [\"2025-01-28\", None, \"2025-01-29\", \"2025-02-15\"],\n})\n\ncleaned = clean_earnings(raw)\nprint(cleaned)\n#   holding_ticker etf_ticker earnings_date\n# 0           AAPL        QQQ    2025-01-28\n# 1           MSFT        QQQ    2025-01-29\n# (Exchange-prefixed rows removed)"
+  },
+  {
+    "objectID": "tutorial.html",
+    "href": "tutorial.html",
+    "title": "Tutorial: ETF Implied Volatility Explorer",
+    "section": "",
+    "text": "This tutorial walks you through installing the etf_iv package and using it to explore ETF options data, holdings, and news sentiment — with and without network access."
+  },
+  {
+    "objectID": "tutorial.html#prerequisites",
+    "href": "tutorial.html#prerequisites",
+    "title": "Tutorial: ETF Implied Volatility Explorer",
+    "section": "Prerequisites",
+    "text": "Prerequisites\n\nPython 3.11 or later\nGit"
+  },
+  {
+    "objectID": "tutorial.html#clone-the-repository",
+    "href": "tutorial.html#clone-the-repository",
+    "title": "Tutorial: ETF Implied Volatility Explorer",
+    "section": "1. Clone the Repository",
+    "text": "1. Clone the Repository\ngit clone https://github.com/jilliangbaker97/Final-Project-386.git\ncd Final-Project-386"
+  },
+  {
+    "objectID": "tutorial.html#create-a-virtual-environment-and-install",
+    "href": "tutorial.html#create-a-virtual-environment-and-install",
+    "title": "Tutorial: ETF Implied Volatility Explorer",
+    "section": "2. Create a Virtual Environment and Install",
+    "text": "2. Create a Virtual Environment and Install\npython -m venv venv\nsource venv/bin/activate        # Windows: venv\\Scripts\\activate\n\npip install -r requirements.txt\npip install -e .                 # installs the etf_iv package in editable mode\n\n\n\n\n\n\nNote\n\n\n\nThe -e . install makes the etf_iv package importable from anywhere in your environment. It also includes the bundled CSV datasets in etf_iv/data/."
+  },
+  {
+    "objectID": "tutorial.html#load-the-bundled-dataset-no-api-keys-needed",
+    "href": "tutorial.html#load-the-bundled-dataset-no-api-keys-needed",
+    "title": "Tutorial: ETF Implied Volatility Explorer",
+    "section": "3. Load the Bundled Dataset (No API Keys Needed)",
+    "text": "3. Load the Bundled Dataset (No API Keys Needed)\nAll data is pre-collected and bundled with the package. Every loader returns a pd.DataFrame and works completely offline.\nfrom etf_iv import (\n    load_price_history,\n    load_options_chain,\n    load_options_filtered,\n    load_etf_holdings,\n    load_earnings_dates,\n    load_etf_sentiment,\n)\n\n# 6-month daily OHLCV for VOO, QQQ, ARKQ, BOTZ\nprices = load_price_history()\nprint(prices.head())\n#    ticker       Date    Open    High     Low   Close     Volume\n# 0    ARKQ 2024-10-01  ...\n\n# Full options chain (all expirations, calls and puts)\noptions_chain = load_options_chain()\nprint(f\"Options chain shape: {options_chain.shape}\")\n\n# Liquidity-filtered options with spot price and moneyness\noptions = load_options_filtered()\nprint(f\"Filtered options shape: {options.shape}\")\n\n# Top-25 holdings per ETF\nholdings = load_etf_holdings()\nprint(holdings[holdings[\"etf_ticker\"] == \"QQQ\"].head(3))\n\n# Earnings dates for each holding\nearnings = load_earnings_dates()\nprint(earnings.head())\n\n# Claude-scored sentiment (1 = very bearish, 5 = very bullish)\nsentiment = load_etf_sentiment()\nprint(sentiment)\n#   etf_ticker  num_articles  sentiment_score sentiment_label\n# 0        VOO            10                4        Positive\n\n\n\n\n\n\nTip\n\n\n\nUse load_options_filtered() rather than load_options_chain() for analysis. The filtered dataset removes illiquid contracts (volume &lt; 1, open interest &lt; 10) and adds spot_price, moneyness, and dte columns."
+  },
+  {
+    "objectID": "tutorial.html#run-the-analysis-functions",
+    "href": "tutorial.html#run-the-analysis-functions",
+    "title": "Tutorial: ETF Implied Volatility Explorer",
+    "section": "4. Run the Analysis Functions",
+    "text": "4. Run the Analysis Functions\n\nPut/Call Ratios\nfrom etf_iv import load_options_filtered, compute_put_call_ratios\n\noptions = load_options_filtered()\n\n# Returns two DataFrames: ticker-level and expiration-level PCR\npcr_ticker, pcr_expiry = compute_put_call_ratios(options)\n\nprint(pcr_ticker[[\"pcr_volume\", \"pcr_oi\"]])\n#         pcr_volume    pcr_oi\n# ticker\n# ARKQ      0.823456  0.912345\n# BOTZ      1.123456  1.234567\n# QQQ       1.456789  1.567890\n# VOO       1.789012  1.890123\n\nprint(pcr_expiry[[\"ticker\", \"expiration\", \"pcr_volume\", \"horizon\"]].head())\n\n\nIV Skew\nfrom etf_iv import compute_iv_skew\n\nskew = compute_iv_skew(options)\nprint(skew[[\"atm_iv\", \"otm_iv\", \"iv_skew\"]])\n#         atm_iv    otm_iv  iv_skew\n# ticker\n# ARKQ    0.2345    0.3456   0.1111\n# BOTZ    0.1987    0.2876   0.0889\n# QQQ     0.1654    0.2345   0.0691\n# VOO     0.1432    0.2123   0.0691\n\n\nForward Returns\nfrom etf_iv import load_price_history, compute_forward_returns\n\nprices  = load_price_history()\nreturns = compute_forward_returns(prices, windows=[1, 5])\nprint(returns[[\"ticker\", \"Date\", \"Close\", \"fwd_1d\", \"fwd_5d\"]].tail())\n\n\nEarnings Proximity\nfrom etf_iv import load_etf_holdings, load_earnings_dates, compute_earnings_proximity\n\nholdings = load_etf_holdings()\nearnings = load_earnings_dates()\n\nproximity = compute_earnings_proximity(holdings, earnings)\nprint(proximity[[\"weighted_dte_earnings\", \"pct_within_30d\", \"pct_within_60d\"]])\n#         weighted_dte_earnings  pct_within_30d  pct_within_60d\n# ticker\n# ARKQ                     23.5            0.40            0.80\n# BOTZ                     31.2            0.30            0.60\n# QQQ                      45.8            0.20            0.50\n# VOO                      52.1            0.15            0.40"
+  },
+  {
+    "objectID": "tutorial.html#visualize-the-results",
+    "href": "tutorial.html#visualize-the-results",
+    "title": "Tutorial: ETF Implied Volatility Explorer",
+    "section": "5. Visualize the Results",
+    "text": "5. Visualize the Results\n\nIV Skew Bar Chart\nimport matplotlib.pyplot as plt\nfrom etf_iv import load_options_filtered, compute_iv_skew\n\noptions = load_options_filtered()\nskew    = compute_iv_skew(options)\n\nfig, ax = plt.subplots(figsize=(7, 4))\nx = range(len(skew))\nax.bar(x, skew[\"atm_iv\"],  label=\"ATM IV\",  alpha=0.7)\nax.bar(x, skew[\"iv_skew\"], bottom=skew[\"atm_iv\"], label=\"Skew (OTM − ATM)\", alpha=0.7)\nax.set_xticks(x)\nax.set_xticklabels(skew.index)\nax.set_ylabel(\"Implied Volatility\")\nax.set_title(\"IV Skew by ETF\")\nax.legend()\nplt.tight_layout()\nplt.show()\n\n\nPCR Heatmap by Expiration\nimport pandas as pd\nimport seaborn as sns\nfrom etf_iv import load_options_filtered, compute_put_call_ratios\n\noptions = load_options_filtered()\n_, pcr_expiry = compute_put_call_ratios(options)\n\npivot = pcr_expiry.pivot_table(\n    index=\"ticker\", columns=\"horizon\", values=\"pcr_volume\", aggfunc=\"mean\"\n)\nsns.heatmap(pivot, annot=True, fmt=\".2f\", cmap=\"RdYlGn_r\")\nplt.title(\"Average PCR by Ticker and Horizon\")\nplt.show()"
+  },
+  {
+    "objectID": "tutorial.html#clean-raw-data-if-collecting-fresh",
+    "href": "tutorial.html#clean-raw-data-if-collecting-fresh",
+    "title": "Tutorial: ETF Implied Volatility Explorer",
+    "section": "6. Clean Raw Data (If Collecting Fresh)",
+    "text": "6. Clean Raw Data (If Collecting Fresh)\nIf you collect fresh data with the live functions, use the cleaning module to standardize it before analysis.\nfrom etf_iv import (\n    get_price_history, get_options_chain,\n    clean_prices, clean_options, filter_liquidity, add_spot_and_moneyness,\n)\n\n# Fetch raw data\nraw_prices  = get_price_history(\"QQQ\", period=\"6mo\")\nraw_options = get_options_chain(\"QQQ\")\n\n# Clean and enrich\nclean_px   = clean_prices(raw_prices)\nclean_opts = clean_options(raw_options)\nfiltered   = filter_liquidity(clean_opts, min_volume=1, min_open_interest=10)\nenriched   = add_spot_and_moneyness(filtered, clean_px)\n\nprint(enriched[[\"ticker\", \"strike\", \"spot_price\", \"moneyness\", \"dte\"]].head())"
+  },
+  {
+    "objectID": "tutorial.html#collect-fresh-sentiment-scores-requires-anthropic-api-key",
+    "href": "tutorial.html#collect-fresh-sentiment-scores-requires-anthropic-api-key",
+    "title": "Tutorial: ETF Implied Volatility Explorer",
+    "section": "7. Collect Fresh Sentiment Scores (Requires Anthropic API Key)",
+    "text": "7. Collect Fresh Sentiment Scores (Requires Anthropic API Key)\n\n\n\n\n\n\nWarning\n\n\n\nSentiment scoring requires an Anthropic API key. Set the environment variable before running:\nexport ANTHROPIC_API_KEY=\"sk-ant-...\"   # macOS/Linux\nset ANTHROPIC_API_KEY=sk-ant-...        # Windows\n\n\nfrom etf_iv import get_etf_headlines, get_sentiment_score\n\nheadlines = get_etf_headlines(\"ARKQ\", max_articles=10)\nprint(headlines[:3])\n# ['ARKQ hits 52-week high...', 'AI robotics ETF sees inflows...', ...]\n\nscore = get_sentiment_score(\"ARKQ\", headlines)\nprint(f\"ARKQ sentiment: {score}/5\")\n# ARKQ sentiment: 4/5\nScores are on a 1–5 scale:\n\n\n\nScore\nLabel\n\n\n\n\n1\nVery Bearish\n\n\n2\nBearish\n\n\n3\nNeutral\n\n\n4\nPositive\n\n\n5\nVery Bullish"
+  },
+  {
+    "objectID": "tutorial.html#run-the-streamlit-dashboard-locally",
+    "href": "tutorial.html#run-the-streamlit-dashboard-locally",
+    "title": "Tutorial: ETF Implied Volatility Explorer",
+    "section": "8. Run the Streamlit Dashboard Locally",
+    "text": "8. Run the Streamlit Dashboard Locally\nstreamlit run streamlit_app.py\nOpen http://localhost:8501 in your browser. The app loads the bundled dataset automatically — no API keys or network access needed.\nOr visit the live deployed app."
+  },
+  {
+    "objectID": "tutorial.html#run-the-full-analysis-notebook",
+    "href": "tutorial.html#run-the-full-analysis-notebook",
+    "title": "Tutorial: ETF Implied Volatility Explorer",
+    "section": "9. Run the Full Analysis Notebook",
+    "text": "9. Run the Full Analysis Notebook\njupyter notebook final_project.ipynb\nThe notebook is organized into 9 sections. Each section loads bundled data by default, with optional “Collect Fresh Data” cells you can run separately.\n\n\n\nSection\nContent\n\n\n\n\n1\nScraping compliance check\n\n\n2\nPrice history collection & cleaning\n\n\n3\nOptions chain collection & cleaning\n\n\n4\nSpot price join & moneyness\n\n\n5\nLiquidity filtering\n\n\n6\nETF holdings scraping\n\n\n7\nEarnings dates scraping\n\n\n8\nNews sentiment scoring (Claude API)\n\n\n9\nPut/Call ratio analysis & visualization\n\n\n10\nIV skew vs. earnings proximity analysis"
+  },
+  {
+    "objectID": "tutorial.html#project-structure",
+    "href": "tutorial.html#project-structure",
+    "title": "Tutorial: ETF Implied Volatility Explorer",
+    "section": "Project Structure",
+    "text": "Project Structure\netf_iv/                    # Installable Python package\n  __init__.py              # Public API (21 functions)\n  data_collection.py       # Options chains, price history, holdings scraping\n  sentiment.py             # Claude-powered headline sentiment scoring\n  cleaning.py              # Data cleaning and filtering\n  analysis.py              # PCR, forward returns, IV skew, earnings proximity\n  data/                    # Bundled CSV datasets\ndocs/                      # This Quarto documentation site\nfinal_project.ipynb        # Main analysis notebook\nstreamlit_app.py           # Interactive Streamlit dashboard\nrequirements.txt           # Pinned dependency versions\npyproject.toml             # Package metadata"
+  }
+]
