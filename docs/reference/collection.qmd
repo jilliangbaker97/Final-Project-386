@@ -1,0 +1,246 @@
+---
+title: "Live Collection"
+subtitle: "Fetch fresh data from yfinance, stockanalysis.com, and the Anthropic API"
+---
+
+The five collection functions download live data from external sources.
+All require network access. The two sentiment functions additionally require
+the `ANTHROPIC_API_KEY` environment variable.
+
+```python
+from etf_iv import (
+    get_price_history,
+    get_options_chain,
+    get_etf_holdings,
+    get_etf_headlines,
+    get_sentiment_score,
+)
+```
+
+::: {.callout-note}
+To skip network access and use pre-collected data instead, see the
+[Bundled Loaders](loaders.qmd) reference.
+:::
+
+---
+
+## `get_price_history()` {#get_price_history}
+
+> Download OHLCV price history for a single ticker via yfinance.
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+|:----------|:-----|:--------|:------------|
+| `ticker` | `str` | required | Ticker symbol (e.g. `"QQQ"`, `"qqq"`) |
+| `period` | `str` | `"1y"` | yfinance period string: `"1d"`, `"5d"`, `"1mo"`, `"3mo"`, `"6mo"`, `"1y"`, `"2y"`, `"5y"`, `"10y"`, `"ytd"`, `"max"` |
+
+**Returns**
+
+`pd.DataFrame` with a `DatetimeIndex` and columns:
+
+| Column | Type | Description |
+|:-------|:-----|:------------|
+| `Open` | `float` | Opening price |
+| `High` | `float` | Daily high |
+| `Low` | `float` | Daily low |
+| `Close` | `float` | Closing price |
+| `Volume` | `int` | Trading volume |
+| `Dividends` | `float` | Dividend amount |
+| `Stock Splits` | `float` | Split factor |
+| `ticker` | `str` | Ticker symbol (uppercase) |
+
+**Raises**
+
+`ValueError` — if the ticker is invalid, the period string is unrecognized,
+or yfinance returns an empty response.
+
+**Example**
+
+```python
+from etf_iv import get_price_history
+
+prices = get_price_history("QQQ", period="6mo")
+print(prices.shape)
+print(prices[["Open", "High", "Low", "Close", "Volume"]].tail(3))
+```
+
+::: {.callout-tip}
+After collecting, pass the result through `clean_prices()` before analysis
+to ensure consistent column names, dtypes, and sorting.
+:::
+
+---
+
+## `get_options_chain()` {#get_options_chain}
+
+> Fetch the full options chain for every available expiration via yfinance.
+
+Combines calls and puts from all listed expirations into a single DataFrame,
+adding `expiration`, `option_type`, and `ticker` columns.
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+|:----------|:-----|:--------|:------------|
+| `ticker` | `str` | required | Ticker symbol (e.g. `"AAPL"`, `"VOO"`) |
+
+**Returns**
+
+`pd.DataFrame` — all yfinance options fields plus:
+
+| Column | Type | Description |
+|:-------|:-----|:------------|
+| `expiration` | `str` | Expiration date (YYYY-MM-DD) |
+| `option_type` | `str` | `"call"` or `"put"` |
+| `ticker` | `str` | Ticker symbol (uppercase) |
+
+**Raises**
+
+`ValueError` — if the ticker is invalid, has no listed options, or a
+network failure occurs.
+
+**Example**
+
+```python
+from etf_iv import get_options_chain
+
+chain = get_options_chain("QQQ")
+print(chain.shape)
+print(chain[["expiration", "option_type", "strike", "impliedVolatility"]].head())
+
+# Count options by expiration
+print(chain.groupby(["expiration", "option_type"]).size())
+```
+
+---
+
+## `get_etf_holdings()` {#get_etf_holdings}
+
+> Fetch top ETF holdings and portfolio weights from stockanalysis.com.
+
+Scrapes the holdings table from `https://stockanalysis.com/etf/{ticker}/holdings/`.
+Complies with `robots.txt` and enforces a 1.5-second request delay.
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+|:----------|:-----|:--------|:------------|
+| `ticker` | `str` | required | ETF symbol (e.g. `"SPY"`, `"QQQ"`) |
+
+**Returns**
+
+`pd.DataFrame` with columns:
+
+| Column | Type | Description |
+|:-------|:-----|:------------|
+| `ticker` | `str` | ETF symbol |
+| `holding_symbol` | `str` | Holding's ticker symbol |
+| `holding_name` | `str` | Holding's company name |
+| `weight_pct` | `float` | Portfolio weight (0–100) |
+
+**Raises**
+
+`ValueError` — if the ticker is invalid, the page structure has changed, or
+no holdings table is found.
+
+**Example**
+
+```python
+from etf_iv import get_etf_holdings
+
+holdings = get_etf_holdings("QQQ")
+print(holdings.nlargest(5, "weight_pct"))
+#   ticker holding_symbol     holding_name  weight_pct
+#      QQQ           MSFT  Microsoft Corp        8.92
+#      QQQ           AAPL       Apple Inc        8.43
+#   ...
+```
+
+---
+
+## `get_etf_headlines()` {#get_etf_headlines}
+
+> Fetch recent news headlines for an ETF ticker via yfinance.
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+|:----------|:-----|:--------|:------------|
+| `ticker` | `str` | required | ETF symbol |
+| `max_articles` | `int` | `10` | Maximum number of headlines to return |
+
+**Returns**
+
+`list[str]` — headline strings, possibly empty if no recent news is available.
+
+**Example**
+
+```python
+from etf_iv import get_etf_headlines
+
+headlines = get_etf_headlines("ARKQ", max_articles=10)
+print(f"Fetched {len(headlines)} headlines")
+for h in headlines[:3]:
+    print(f"  • {h}")
+```
+
+---
+
+## `get_sentiment_score()` {#get_sentiment_score}
+
+> Score a list of news headlines 1–5 using Anthropic Claude's tool-use API.
+
+Uses Claude's structured tool-use output (via the `record_sentiment` tool
+schema) to produce a consistent integer score. Falls back to `3` (Neutral)
+if no headlines are provided or if the API returns no tool-use block.
+
+::: {.callout-warning}
+This function requires the `ANTHROPIC_API_KEY` environment variable:
+
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."   # macOS/Linux
+set ANTHROPIC_API_KEY=sk-ant-...        # Windows
+```
+:::
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+|:----------|:-----|:--------|:------------|
+| `ticker` | `str` | required | ETF symbol (used as context in the prompt) |
+| `headlines` | `list[str]` | required | Headline strings to score |
+| `model` | `str` | `"claude-sonnet-4-6"` | Anthropic model ID (keyword-only) |
+| `client` | `anthropic.Anthropic \| None` | `None` | Pre-built client; creates one from env var if `None` (keyword-only) |
+
+**Returns**
+
+`int` — score from 1 to 5:
+
+| Score | Label |
+|:-----:|:------|
+| 1 | Very Bearish |
+| 2 | Bearish |
+| 3 | Neutral |
+| 4 | Positive |
+| 5 | Very Bullish |
+
+**Example**
+
+```python
+from etf_iv import get_etf_headlines, get_sentiment_score
+
+headlines = get_etf_headlines("ARKQ", max_articles=10)
+score     = get_sentiment_score("ARKQ", headlines)
+print(f"ARKQ sentiment: {score}/5")
+# ARKQ sentiment: 4/5
+
+# Pass a pre-built client to reuse across multiple calls
+import anthropic
+client = anthropic.Anthropic()
+scores = {
+    ticker: get_sentiment_score(ticker, get_etf_headlines(ticker), client=client)
+    for ticker in ["VOO", "QQQ", "ARKQ", "BOTZ"]
+}
+print(scores)
+```

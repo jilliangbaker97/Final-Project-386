@@ -1,0 +1,321 @@
+---
+title: "Tutorial: ETF Implied Volatility Explorer"
+subtitle: "Install the package, load data, run analysis, and visualize results"
+---
+
+This tutorial walks you through installing the `etf_iv` package and using it
+to explore ETF options data, holdings, and news sentiment — with and without
+network access.
+
+## Prerequisites
+
+- Python 3.11 or later
+- Git
+
+---
+
+## 1. Clone the Repository
+
+```bash
+git clone https://github.com/jilliangbaker97/Final-Project-386.git
+cd Final-Project-386
+```
+
+---
+
+## 2. Create a Virtual Environment and Install
+
+```bash
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+
+pip install -r requirements.txt
+pip install -e .                 # installs the etf_iv package in editable mode
+```
+
+::: {.callout-note}
+The `-e .` install makes the `etf_iv` package importable from anywhere in
+your environment. It also includes the bundled CSV datasets in `etf_iv/data/`.
+:::
+
+---
+
+## 3. Load the Bundled Dataset (No API Keys Needed)
+
+All data is pre-collected and bundled with the package. Every loader returns
+a `pd.DataFrame` and works completely offline.
+
+```python
+from etf_iv import (
+    load_price_history,
+    load_options_chain,
+    load_options_filtered,
+    load_etf_holdings,
+    load_earnings_dates,
+    load_etf_sentiment,
+)
+
+# 6-month daily OHLCV for VOO, QQQ, ARKQ, BOTZ
+prices = load_price_history()
+print(prices.head())
+#    ticker       Date    Open    High     Low   Close     Volume
+# 0    ARKQ 2024-10-01  ...
+
+# Full options chain (all expirations, calls and puts)
+options_chain = load_options_chain()
+print(f"Options chain shape: {options_chain.shape}")
+
+# Liquidity-filtered options with spot price and moneyness
+options = load_options_filtered()
+print(f"Filtered options shape: {options.shape}")
+
+# Top-25 holdings per ETF
+holdings = load_etf_holdings()
+print(holdings[holdings["etf_ticker"] == "QQQ"].head(3))
+
+# Earnings dates for each holding
+earnings = load_earnings_dates()
+print(earnings.head())
+
+# Claude-scored sentiment (1 = very bearish, 5 = very bullish)
+sentiment = load_etf_sentiment()
+print(sentiment)
+#   etf_ticker  num_articles  sentiment_score sentiment_label
+# 0        VOO            10                4        Positive
+```
+
+::: {.callout-tip}
+Use `load_options_filtered()` rather than `load_options_chain()` for analysis.
+The filtered dataset removes illiquid contracts (volume < 1, open interest < 10)
+and adds `spot_price`, `moneyness`, and `dte` columns.
+:::
+
+---
+
+## 4. Run the Analysis Functions
+
+### Put/Call Ratios
+
+```python
+from etf_iv import load_options_filtered, compute_put_call_ratios
+
+options = load_options_filtered()
+
+# Returns two DataFrames: ticker-level and expiration-level PCR
+pcr_ticker, pcr_expiry = compute_put_call_ratios(options)
+
+print(pcr_ticker[["pcr_volume", "pcr_oi"]])
+#         pcr_volume    pcr_oi
+# ticker
+# ARKQ      0.823456  0.912345
+# BOTZ      1.123456  1.234567
+# QQQ       1.456789  1.567890
+# VOO       1.789012  1.890123
+
+print(pcr_expiry[["ticker", "expiration", "pcr_volume", "horizon"]].head())
+```
+
+### IV Skew
+
+```python
+from etf_iv import compute_iv_skew
+
+skew = compute_iv_skew(options)
+print(skew[["atm_iv", "otm_iv", "iv_skew"]])
+#         atm_iv    otm_iv  iv_skew
+# ticker
+# ARKQ    0.2345    0.3456   0.1111
+# BOTZ    0.1987    0.2876   0.0889
+# QQQ     0.1654    0.2345   0.0691
+# VOO     0.1432    0.2123   0.0691
+```
+
+### Forward Returns
+
+```python
+from etf_iv import load_price_history, compute_forward_returns
+
+prices  = load_price_history()
+returns = compute_forward_returns(prices, windows=[1, 5])
+print(returns[["ticker", "Date", "Close", "fwd_1d", "fwd_5d"]].tail())
+```
+
+### Earnings Proximity
+
+```python
+from etf_iv import load_etf_holdings, load_earnings_dates, compute_earnings_proximity
+
+holdings = load_etf_holdings()
+earnings = load_earnings_dates()
+
+proximity = compute_earnings_proximity(holdings, earnings)
+print(proximity[["weighted_dte_earnings", "pct_within_30d", "pct_within_60d"]])
+#         weighted_dte_earnings  pct_within_30d  pct_within_60d
+# ticker
+# ARKQ                     23.5            0.40            0.80
+# BOTZ                     31.2            0.30            0.60
+# QQQ                      45.8            0.20            0.50
+# VOO                      52.1            0.15            0.40
+```
+
+---
+
+## 5. Visualize the Results
+
+### IV Skew Bar Chart
+
+```python
+import matplotlib.pyplot as plt
+from etf_iv import load_options_filtered, compute_iv_skew
+
+options = load_options_filtered()
+skew    = compute_iv_skew(options)
+
+fig, ax = plt.subplots(figsize=(7, 4))
+x = range(len(skew))
+ax.bar(x, skew["atm_iv"],  label="ATM IV",  alpha=0.7)
+ax.bar(x, skew["iv_skew"], bottom=skew["atm_iv"], label="Skew (OTM − ATM)", alpha=0.7)
+ax.set_xticks(x)
+ax.set_xticklabels(skew.index)
+ax.set_ylabel("Implied Volatility")
+ax.set_title("IV Skew by ETF")
+ax.legend()
+plt.tight_layout()
+plt.show()
+```
+
+### PCR Heatmap by Expiration
+
+```python
+import pandas as pd
+import seaborn as sns
+from etf_iv import load_options_filtered, compute_put_call_ratios
+
+options = load_options_filtered()
+_, pcr_expiry = compute_put_call_ratios(options)
+
+pivot = pcr_expiry.pivot_table(
+    index="ticker", columns="horizon", values="pcr_volume", aggfunc="mean"
+)
+sns.heatmap(pivot, annot=True, fmt=".2f", cmap="RdYlGn_r")
+plt.title("Average PCR by Ticker and Horizon")
+plt.show()
+```
+
+---
+
+## 6. Clean Raw Data (If Collecting Fresh)
+
+If you collect fresh data with the live functions, use the cleaning module
+to standardize it before analysis.
+
+```python
+from etf_iv import (
+    get_price_history, get_options_chain,
+    clean_prices, clean_options, filter_liquidity, add_spot_and_moneyness,
+)
+
+# Fetch raw data
+raw_prices  = get_price_history("QQQ", period="6mo")
+raw_options = get_options_chain("QQQ")
+
+# Clean and enrich
+clean_px   = clean_prices(raw_prices)
+clean_opts = clean_options(raw_options)
+filtered   = filter_liquidity(clean_opts, min_volume=1, min_open_interest=10)
+enriched   = add_spot_and_moneyness(filtered, clean_px)
+
+print(enriched[["ticker", "strike", "spot_price", "moneyness", "dte"]].head())
+```
+
+---
+
+## 7. Collect Fresh Sentiment Scores (Requires Anthropic API Key)
+
+::: {.callout-warning}
+Sentiment scoring requires an [Anthropic API key](https://www.anthropic.com).
+Set the environment variable before running:
+
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."   # macOS/Linux
+set ANTHROPIC_API_KEY=sk-ant-...        # Windows
+```
+:::
+
+```python
+from etf_iv import get_etf_headlines, get_sentiment_score
+
+headlines = get_etf_headlines("ARKQ", max_articles=10)
+print(headlines[:3])
+# ['ARKQ hits 52-week high...', 'AI robotics ETF sees inflows...', ...]
+
+score = get_sentiment_score("ARKQ", headlines)
+print(f"ARKQ sentiment: {score}/5")
+# ARKQ sentiment: 4/5
+```
+
+Scores are on a 1–5 scale:
+
+| Score | Label |
+|:-----:|:------|
+| 1 | Very Bearish |
+| 2 | Bearish |
+| 3 | Neutral |
+| 4 | Positive |
+| 5 | Very Bullish |
+
+---
+
+## 8. Run the Streamlit Dashboard Locally
+
+```bash
+streamlit run streamlit_app.py
+```
+
+Open `http://localhost:8501` in your browser. The app loads the bundled
+dataset automatically — no API keys or network access needed.
+
+Or visit the [live deployed app](https://final-project-386.streamlit.app).
+
+---
+
+## 9. Run the Full Analysis Notebook
+
+```bash
+jupyter notebook final_project.ipynb
+```
+
+The notebook is organized into 9 sections. Each section loads bundled data
+by default, with optional "Collect Fresh Data" cells you can run separately.
+
+| Section | Content |
+|:-------:|:--------|
+| 1 | Scraping compliance check |
+| 2 | Price history collection & cleaning |
+| 3 | Options chain collection & cleaning |
+| 4 | Spot price join & moneyness |
+| 5 | Liquidity filtering |
+| 6 | ETF holdings scraping |
+| 7 | Earnings dates scraping |
+| 8 | News sentiment scoring (Claude API) |
+| 9 | Put/Call ratio analysis & visualization |
+| 10 | IV skew vs. earnings proximity analysis |
+
+---
+
+## Project Structure
+
+```
+etf_iv/                    # Installable Python package
+  __init__.py              # Public API (21 functions)
+  data_collection.py       # Options chains, price history, holdings scraping
+  sentiment.py             # Claude-powered headline sentiment scoring
+  cleaning.py              # Data cleaning and filtering
+  analysis.py              # PCR, forward returns, IV skew, earnings proximity
+  data/                    # Bundled CSV datasets
+docs/                      # This Quarto documentation site
+final_project.ipynb        # Main analysis notebook
+streamlit_app.py           # Interactive Streamlit dashboard
+requirements.txt           # Pinned dependency versions
+pyproject.toml             # Package metadata
+```

@@ -1,0 +1,257 @@
+---
+title: "Bundled Loaders"
+subtitle: "Load pre-collected CSV data with no network access or API keys"
+---
+
+The six loader functions read CSV files bundled inside the `etf_iv/data/`
+package directory. They work completely offline and require no API keys.
+All functions return a `pd.DataFrame`.
+
+```python
+from etf_iv import (
+    load_price_history,
+    load_options_chain,
+    load_options_filtered,
+    load_etf_holdings,
+    load_earnings_dates,
+    load_etf_sentiment,
+)
+```
+
+::: {.callout-note}
+To collect fresh data instead of using the bundled files, see the
+[Live Collection](collection.qmd) reference.
+:::
+
+---
+
+## `load_price_history()` {#load_price_history}
+
+> Load bundled 6-month daily OHLCV price history for VOO, QQQ, ARKQ, and BOTZ.
+
+**Parameters**
+
+None.
+
+**Returns**
+
+`pd.DataFrame` with columns:
+
+| Column | Type | Description |
+|:-------|:-----|:------------|
+| `ticker` | `str` | ETF symbol (VOO, QQQ, ARKQ, BOTZ) |
+| `Date` | `datetime` | Trading date (tz-naive) |
+| `Open` | `float` | Opening price |
+| `High` | `float` | Daily high price |
+| `Low` | `float` | Daily low price |
+| `Close` | `float` | Closing price |
+| `Volume` | `int` | Trading volume |
+
+**Example**
+
+```python
+from etf_iv import load_price_history
+
+prices = load_price_history()
+print(prices.shape)       # (504, 7)  — 4 tickers × ~126 trading days
+print(prices.dtypes)
+print(prices.head())
+#   ticker       Date    Open    High     Low   Close    Volume
+# 0   ARKQ 2024-10-01  ...
+```
+
+---
+
+## `load_options_chain()` {#load_options_chain}
+
+> Load the full bundled options chain across all listed expirations (cleaned).
+
+**Parameters**
+
+None.
+
+**Returns**
+
+`pd.DataFrame` with columns:
+
+| Column | Type | Description |
+|:-------|:-----|:------------|
+| `ticker` | `str` | ETF symbol |
+| `expiration` | `str` | Expiration date (YYYY-MM-DD) |
+| `contractType` | `str` | `"call"` or `"put"` |
+| `strike` | `float` | Strike price |
+| `bid` | `float` | Bid price |
+| `ask` | `float` | Ask price |
+| `volume` | `float` | Contracts traded today |
+| `openInterest` | `float` | Open interest |
+| `impliedVolatility` | `float` | Implied volatility (annualized) |
+
+::: {.callout-tip}
+For most analysis use [`load_options_filtered()`](#load_options_filtered),
+which removes illiquid contracts and adds `spot_price`, `moneyness`, and `dte`.
+:::
+
+**Example**
+
+```python
+from etf_iv import load_options_chain
+
+chain = load_options_chain()
+print(chain.shape)
+print(chain["contractType"].value_counts())
+# call    ...
+# put     ...
+```
+
+---
+
+## `load_options_filtered()` {#load_options_filtered}
+
+> Load the liquidity-filtered options chain with spot price, moneyness, and DTE.
+
+Contracts are filtered to `volume >= 1` and `openInterest >= 10`.
+
+**Parameters**
+
+None.
+
+**Returns**
+
+`pd.DataFrame` — all columns from `load_options_chain()` plus:
+
+| Column | Type | Description |
+|:-------|:-----|:------------|
+| `spot_price` | `float` | Underlying close price on collection date |
+| `moneyness` | `float` | Strike / spot (1.0 = at-the-money) |
+| `dte` | `int` | Calendar days to expiration from collection date |
+
+**Example**
+
+```python
+from etf_iv import load_options_filtered
+
+options = load_options_filtered()
+print(options.shape)    # smaller than full chain — illiquid contracts removed
+
+# Inspect moneyness distribution
+print(options["moneyness"].describe())
+# count    ...
+# mean     ~1.0 (centered at ATM)
+# ...
+
+# Filter to near-the-money puts
+atm_puts = options[
+    (options["contractType"] == "put") &
+    (options["moneyness"].between(0.95, 1.05))
+]
+```
+
+---
+
+## `load_etf_holdings()` {#load_etf_holdings}
+
+> Load bundled top-25 holdings and portfolio weights for each ETF, scraped from stockanalysis.com.
+
+**Parameters**
+
+None.
+
+**Returns**
+
+`pd.DataFrame` with columns:
+
+| Column | Type | Description |
+|:-------|:-----|:------------|
+| `holding_ticker` | `str` | Holding's stock symbol |
+| `company_name` | `str` | Holding's company name |
+| `weight_pct` | `float` | Portfolio weight (0–100) |
+| `etf_ticker` | `str` | Parent ETF symbol |
+
+**Example**
+
+```python
+from etf_iv import load_etf_holdings
+
+holdings = load_etf_holdings()
+
+# Top 5 holdings in QQQ by weight
+qqq = holdings[holdings["etf_ticker"] == "QQQ"].nlargest(5, "weight_pct")
+print(qqq[["holding_ticker", "company_name", "weight_pct"]])
+#   holding_ticker         company_name  weight_pct
+#   MSFT            Microsoft Corp         8.92
+#   AAPL            Apple Inc              8.43
+#   ...
+```
+
+---
+
+## `load_earnings_dates()` {#load_earnings_dates}
+
+> Load bundled next-earnings dates for the top holdings of each ETF.
+
+**Parameters**
+
+None.
+
+**Returns**
+
+`pd.DataFrame` with columns:
+
+| Column | Type | Description |
+|:-------|:-----|:------------|
+| `holding_ticker` | `str` | Stock symbol of the holding |
+| `etf_ticker` | `str` | Parent ETF symbol |
+| `earnings_date` | `datetime` | Next scheduled earnings date (NaT if unavailable) |
+
+**Example**
+
+```python
+from etf_iv import load_earnings_dates
+import pandas as pd
+
+earnings = load_earnings_dates()
+
+# Holdings with earnings within the next 30 days
+today = pd.Timestamp.today()
+soon  = earnings[earnings["earnings_date"] <= today + pd.Timedelta(days=30)]
+print(soon.sort_values("earnings_date"))
+```
+
+---
+
+## `load_etf_sentiment()` {#load_etf_sentiment}
+
+> Load bundled Anthropic Claude news-sentiment scores for each ETF.
+
+Scores were computed with `get_sentiment_score()` over the top 10 recent
+headlines per ETF. The 1–5 scale maps to: 1 = Very Bearish, 2 = Bearish,
+3 = Neutral, 4 = Positive, 5 = Very Bullish.
+
+**Parameters**
+
+None.
+
+**Returns**
+
+`pd.DataFrame` with columns:
+
+| Column | Type | Description |
+|:-------|:-----|:------------|
+| `etf_ticker` | `str` | ETF symbol |
+| `num_articles` | `int` | Number of headlines scored |
+| `sentiment_score` | `int` | 1–5 composite score |
+| `sentiment_label` | `str` | Human-readable label for the score |
+
+**Example**
+
+```python
+from etf_iv import load_etf_sentiment
+
+sentiment = load_etf_sentiment()
+print(sentiment)
+#   etf_ticker  num_articles  sentiment_score sentiment_label
+# 0        VOO            10                4        Positive
+# 1        QQQ            10                4        Positive
+# 2       ARKQ            10                3         Neutral
+# 3       BOTZ            10                3         Neutral
+```
