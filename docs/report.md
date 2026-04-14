@@ -14,12 +14,12 @@ skew**. This project asks whether those signals contain meaningful
 information about future returns and earnings risk for four ETFs that span
 different investment styles:
 
-| ETF | Focus |
-|-----|-------|
-| VOO | S&P 500 broad market |
-| QQQ | Nasdaq-100 large-cap tech |
+| ETF  | Focus                                        |
+| ---- | -------------------------------------------- |
+| VOO  | S&P 500 broad market                         |
+| QQQ  | Nasdaq-100 large-cap tech                    |
 | ARKQ | ARK autonomous & robotics (actively managed) |
-| BOTZ | Global X robotics & AI (index-based) |
+| BOTZ | Global X robotics & AI (index-based)         |
 
 Two research questions guided the analysis:
 
@@ -161,7 +161,7 @@ pip install -r requirements.txt && pip install -e .
 jupyter notebook final_project.ipynb
 ```
 
-See the [Tutorial](tutorial.md) for full setup instructions and the
+See the [Tutorial](tutorial.html) for full setup instructions and the
 [API Documentation](api/etf_iv.html) for function references.
 
 ---
@@ -170,5 +170,5 @@ See the [Tutorial](tutorial.md) for full setup instructions and the
 
 - [Streamlit App](https://final-project-386.streamlit.app)
 - [GitHub Repository](https://github.com/jilliangbaker97/Final-Project-386)
-- [Tutorial](tutorial.md)
-- [API Documentation](api/etf_iv.html)
+- [Tutorial](https://jilliangbaker97.github.io/Final-Project-386/tutorial.html)
+- [API Documentation](https://jilliangbaker97.github.io/Final-Project-386/reference/index.html)
