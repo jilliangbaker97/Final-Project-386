@@ -315,6 +315,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Small cross-sectional n</strong> — With only four ETFs, all correlations are illustrative rather than statistically conclusive.</li>
 <li><strong>Holdings staleness</strong> — ETF holdings are scraped at a single point in time and may not reflect intraday rebalancing.</li>
 <li><strong>Confounding factors</strong> — ETFs differ in sector composition, average market cap, liquidity, and recent volatility, all of which affect options pricing independently of earnings proximity or sentiment.</li>
+<li><strong>Insufficient ATM contracts for thematic ETFs</strong> — ARKQ and BOTZ had no put contracts within the ATM moneyness band [0.97, 1.03] in the 15–60 DTE window, making IV skew uncomputable for these tickers. The cross-sectional IV skew comparison is therefore limited to QQQ and VOO only.</li>
+<li><strong>Expiration-bucketed correlations undefined</strong> — Because all option expirations extend beyond the 6-month price history window, return-to-expiry was constant across observations, making Pearson and Spearman correlations undefined. The expiration-bucketed analysis is therefore directionally incomplete.</li>
 </ul>
 <hr>
 </section>
