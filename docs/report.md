@@ -156,6 +156,15 @@ additional feature alongside PCR and IV skew.
 - **Confounding factors** — ETFs differ in sector composition, average
   market cap, liquidity, and recent volatility, all of which affect options
   pricing independently of earnings proximity or sentiment.
+- **Insufficient ATM contracts for thematic ETFs** — ARKQ and BOTZ had no 
+  put contracts within the ATM moneyness band [0.97, 1.03] in the 15–60 DTE 
+  window, making IV skew uncomputable for these tickers. The cross-sectional 
+  IV skew comparison is therefore limited to QQQ and VOO only.
+- **Expiration-bucketed correlations undefined** — Because all option 
+  expirations extend beyond the 6-month price history window, 
+  return-to-expiry was constant across observations, making Pearson and 
+  Spearman correlations undefined. The expiration-bucketed analysis is 
+  therefore directionally incomplete.
 
 ---
 
