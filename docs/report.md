@@ -132,6 +132,16 @@ only four data points this relationship cannot be established statistically.
 A stronger test would require daily IV snapshots tracked across the earnings
 window for each holding.
 
+### News Sentiment
+
+ETF news sentiment was scored on a 1–5 scale using the Anthropic Claude API 
+with structured tool-use output. At the time of data collection, yfinance 
+returned no headlines for any of the four ETFs, resulting in all four tickers 
+defaulting to a neutral score of 3. As a result, sentiment could not be used 
+as a meaningful signal in this analysis. In a future iteration, sentiment scores 
+collected during periods of active news coverage could be incorporated as an 
+additional feature alongside PCR and IV skew.
+
 ---
 
 ## Limitations
