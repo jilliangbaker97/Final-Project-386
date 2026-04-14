@@ -1,0 +1,285 @@
+---
+title: "Cleaning"
+subtitle: "Standardize, filter, and enrich raw DataFrames before analysis"
+---
+
+The six cleaning functions transform raw collected DataFrames into
+analysis-ready form. Every function returns a cleaned copy — the input
+DataFrame is never mutated.
+
+```python
+from etf_iv import (
+    clean_prices,
+    clean_options,
+    filter_liquidity,
+    add_spot_and_moneyness,
+    clean_holdings,
+    clean_earnings,
+)
+```
+
+::: {.callout-note}
+If you are using the pre-collected bundled data, cleaning has already been
+applied. These functions are only needed after collecting fresh data with the
+[Live Collection](collection.qmd) functions.
+:::
+
+---
+
+## `clean_prices()` {#clean_prices}
+
+> Standardize a raw price-history DataFrame from `get_price_history()` or a CSV.
+
+**Parameters**
+
+| Parameter | Type | Description |
+|:----------|:-----|:------------|
+| `df` | `pd.DataFrame` | Raw price DataFrame; must contain `ticker`, `Close`, and either a `Date` column or a DatetimeIndex |
+
+**Returns**
+
+`pd.DataFrame` with columns `ticker`, `Date`, `Open`, `High`, `Low`, `Close`,
+`Volume` — consistent dtypes, tz-naive dates, sorted by `[ticker, Date]`.
+
+**Raises**
+
+`ValueError` — if `df` is empty or missing essential columns (`ticker`, `Close`).
+
+**Example**
+
+```python
+from etf_iv import get_price_history, clean_prices
+
+raw    = get_price_history("QQQ", period="6mo")
+prices = clean_prices(raw)
+
+print(prices.dtypes)
+# ticker            object
+# Date      datetime64[ns]
+# Open             float64
+# High             float64
+# Low              float64
+# Close            float64
+# Volume             int64
+
+print(prices.head())
+```
+
+---
+
+## `clean_options()` {#clean_options}
+
+> Standardize a raw options chain from `get_options_chain()`.
+
+Renames `option_type` to `contractType` if present, enforces canonical
+column names and dtypes, drops rows missing `strike` or `impliedVolatility`,
+and sorts by `[ticker, expiration, contractType, strike]`.
+
+**Parameters**
+
+| Parameter | Type | Description |
+|:----------|:-----|:------------|
+| `df` | `pd.DataFrame` | Raw options chain from `get_options_chain()` |
+
+**Returns**
+
+`pd.DataFrame` with canonical columns: `ticker`, `expiration`, `contractType`,
+`strike`, `bid`, `ask`, `volume`, `openInterest`, `impliedVolatility`,
+plus any additional yfinance fields.
+
+**Raises**
+
+`ValueError` — if `df` is empty or missing required columns.
+
+**Example**
+
+```python
+from etf_iv import get_options_chain, clean_options
+
+raw     = get_options_chain("VOO")
+options = clean_options(raw)
+
+print(options[["ticker", "expiration", "contractType", "strike", "impliedVolatility"]].head())
+print(f"Rows before cleaning: {len(raw)}, after: {len(options)}")
+```
+
+---
+
+## `filter_liquidity()` {#filter_liquidity}
+
+> Remove illiquid option contracts that fall below volume or open-interest thresholds.
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+|:----------|:-----|:--------|:------------|
+| `df` | `pd.DataFrame` | required | Cleaned options DataFrame with `volume` and `openInterest` columns |
+| `min_volume` | `int` | `1` | Minimum daily volume (inclusive) |
+| `min_open_interest` | `int` | `10` | Minimum open interest (inclusive) |
+
+**Returns**
+
+`pd.DataFrame` — filtered copy with reset index.
+
+**Example**
+
+```python
+from etf_iv import get_options_chain, clean_options, filter_liquidity
+
+chain    = clean_options(get_options_chain("QQQ"))
+filtered = filter_liquidity(chain, min_volume=1, min_open_interest=10)
+
+print(f"Contracts before: {len(chain)}, after filtering: {len(filtered)}")
+print(filtered["volume"].min())   # >= 1
+print(filtered["openInterest"].min())  # >= 10
+```
+
+---
+
+## `add_spot_and_moneyness()` {#add_spot_and_moneyness}
+
+> Merge the most recent spot price into an options DataFrame and compute moneyness and DTE.
+
+For each option contract, the function looks up the latest `Close` for its
+ticker from `prices`, attaches it as `spot_price`, then computes:
+
+- `moneyness = strike / spot_price` (1.0 = at-the-money, <1 = OTM call/ITM put, >1 = ITM call/OTM put)
+- `dte` = calendar days from today to `expiration`
+
+**Parameters**
+
+| Parameter | Type | Description |
+|:----------|:-----|:------------|
+| `options` | `pd.DataFrame` | Cleaned options with `ticker`, `strike`, `expiration` |
+| `prices` | `pd.DataFrame` | Cleaned prices with `ticker`, `Date`, `Close` |
+
+**Returns**
+
+`pd.DataFrame` — `options` with three added columns:
+
+| Column | Type | Description |
+|:-------|:-----|:------------|
+| `spot_price` | `float` | Latest closing price for the ticker |
+| `moneyness` | `float` | `strike / spot_price` |
+| `dte` | `int` | Calendar days from today to expiration |
+
+**Raises**
+
+`ValueError` — if any ticker in `options` has no matching price rows in `prices`.
+
+**Example**
+
+```python
+from etf_iv import (
+    get_price_history, get_options_chain,
+    clean_prices, clean_options, filter_liquidity, add_spot_and_moneyness,
+)
+
+prices  = clean_prices(get_price_history("QQQ", period="6mo"))
+options = filter_liquidity(clean_options(get_options_chain("QQQ")))
+enriched = add_spot_and_moneyness(options, prices)
+
+print(enriched[["strike", "spot_price", "moneyness", "dte"]].head())
+#    strike  spot_price  moneyness  dte
+#     400.0      480.5   0.8325    12
+#     420.0      480.5   0.8741    12
+#     ...
+
+# Near-the-money puts expiring in 15–60 days
+atm_puts = enriched[
+    (enriched["contractType"] == "put") &
+    (enriched["moneyness"].between(0.97, 1.03)) &
+    (enriched["dte"].between(15, 60))
+]
+```
+
+---
+
+## `clean_holdings()` {#clean_holdings}
+
+> Normalize holdings column names and types, handling both package and notebook naming conventions.
+
+Accepts either `holding_symbol`/`ticker` (from `get_etf_holdings()`) or
+`holding_ticker`/`etf_ticker` naming (from CSV), and normalizes to a
+consistent schema.
+
+**Parameters**
+
+| Parameter | Type | Description |
+|:----------|:-----|:------------|
+| `df` | `pd.DataFrame` | Raw holdings DataFrame from `get_etf_holdings()` or a CSV |
+
+**Returns**
+
+`pd.DataFrame` with normalized columns:
+
+| Column | Type | Description |
+|:-------|:-----|:------------|
+| `holding_ticker` | `str` | Holding's stock symbol |
+| `etf_ticker` | `str` | Parent ETF symbol |
+| `holding_name` | `str` | Company name (if present) |
+| `weight_pct` | `float` | Portfolio weight (0–100) |
+
+**Raises**
+
+`ValueError` — if `df` is empty.
+
+**Example**
+
+```python
+from etf_iv import get_etf_holdings, clean_holdings
+
+raw      = get_etf_holdings("BOTZ")
+holdings = clean_holdings(raw)
+
+print(holdings.dtypes)
+# holding_ticker     object
+# etf_ticker         object
+# holding_name       object
+# weight_pct        float64
+```
+
+---
+
+## `clean_earnings()` {#clean_earnings}
+
+> Parse earnings date strings and filter out exchange-prefixed tickers.
+
+Removes tickers with exchange prefixes (containing `:` or `/`) that
+represent non-US-listed securities. Parses `earnings_date` strings to
+`datetime`; unparseable values become `NaT` (kept in output).
+
+**Parameters**
+
+| Parameter | Type | Description |
+|:----------|:-----|:------------|
+| `df` | `pd.DataFrame` | Raw earnings DataFrame; must contain `holding_ticker` and `earnings_date` |
+
+**Returns**
+
+`pd.DataFrame` — exchange-prefixed tickers removed; `earnings_date` cast to
+`datetime64[ns]` (with `NaT` for unparseable values).
+
+**Raises**
+
+`ValueError` — if `df` is empty.
+
+**Example**
+
+```python
+from etf_iv import clean_earnings
+import pandas as pd
+
+raw = pd.DataFrame({
+    "holding_ticker": ["AAPL", "XLON:BP", "MSFT", "TSX:RY"],
+    "etf_ticker":     ["QQQ",   "BOTZ",  "QQQ",   "BOTZ"],
+    "earnings_date":  ["2025-01-28", None, "2025-01-29", "2025-02-15"],
+})
+
+cleaned = clean_earnings(raw)
+print(cleaned)
+#   holding_ticker etf_ticker earnings_date
+# 0           AAPL        QQQ    2025-01-28
+# 1           MSFT        QQQ    2025-01-29
+# (Exchange-prefixed rows removed)
+```

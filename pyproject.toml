@@ -30,6 +30,7 @@ dev = [
     "pyarrow>=15.0",
     "scipy>=1.14",
     "jupyter",
+    "pytest>=8.0",
 ]
 
 [tool.setuptools.packages.find]

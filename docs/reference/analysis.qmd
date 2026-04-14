@@ -1,0 +1,247 @@
+---
+title: "Analysis"
+subtitle: "Compute PCR, IV skew, forward returns, and earnings proximity from cleaned DataFrames"
+---
+
+The four analysis functions derive metrics from cleaned DataFrames. They
+perform no data fetching or cleaning — pass DataFrames from the
+[Bundled Loaders](loaders.qmd) or the [Cleaning](cleaning.qmd) module.
+
+```python
+from etf_iv import (
+    compute_put_call_ratios,
+    compute_forward_returns,
+    compute_iv_skew,
+    compute_earnings_proximity,
+)
+```
+
+---
+
+## `compute_put_call_ratios()` {#compute_put_call_ratios}
+
+> Compute put/call ratios aggregated by ticker and by ticker-expiration.
+
+Returns **two** DataFrames: one at the ticker level and one broken out by
+expiration. The expiration-level DataFrame also classifies each expiration
+into a horizon bucket (`near`, `mid`, `far`).
+
+**Parameters**
+
+| Parameter | Type | Description |
+|:----------|:-----|:------------|
+| `options` | `pd.DataFrame` | Cleaned options with `ticker`, `expiration`, `contractType`, `volume`, `openInterest` |
+
+**Returns**
+
+A `tuple[pd.DataFrame, pd.DataFrame]`:
+
+**`pcr_ticker`** — indexed by `ticker`:
+
+| Column | Type | Description |
+|:-------|:-----|:------------|
+| `pcr_volume` | `float` | Put volume / Call volume |
+| `pcr_oi` | `float` | Put open interest / Call open interest |
+| `put_volume` | `float` | Total put volume |
+| `call_volume` | `float` | Total call volume |
+| `put_oi` | `float` | Total put open interest |
+| `call_oi` | `float` | Total call open interest |
+
+**`pcr_expiry`** — one row per (ticker, expiration):
+
+| Column | Type | Description |
+|:-------|:-----|:------------|
+| `ticker` | `str` | ETF symbol |
+| `expiration` | `str` | Expiration date |
+| `pcr_volume` | `float` | Put/call volume ratio |
+| `pcr_oi` | `float` | Put/call OI ratio |
+| `days_to_exp` | `int` | Days from today to expiration |
+| `horizon` | `str` | `"near"` (≤30d), `"mid"` (31–90d), or `"far"` (>90d) |
+
+**Example**
+
+```python
+from etf_iv import load_options_filtered, compute_put_call_ratios
+
+options = load_options_filtered()
+pcr_ticker, pcr_expiry = compute_put_call_ratios(options)
+
+print(pcr_ticker[["pcr_volume", "pcr_oi"]])
+#         pcr_volume    pcr_oi
+# ticker
+# ARKQ      0.823456  0.912345
+# BOTZ      1.123456  1.234567
+# QQQ       1.456789  1.567890
+# VOO       1.789012  1.890123
+
+# Near-term expirations only
+near = pcr_expiry[pcr_expiry["horizon"] == "near"]
+print(near[["ticker", "expiration", "pcr_volume"]].head())
+```
+
+::: {.callout-tip}
+PCR > 1.5 is often used as a bearish signal (excess put buying relative to
+calls). PCR < 0.5 is treated as a bullish signal. However, broad-market ETFs
+like VOO and QQQ carry structurally elevated PCR from institutional hedging,
+making raw thresholds less reliable for those instruments.
+:::
+
+---
+
+## `compute_forward_returns()` {#compute_forward_returns}
+
+> Add N-day forward return columns to a price-history DataFrame.
+
+For each trading-day row, computes the percentage change in `Close` N days
+forward. The last N rows for each ticker will have `NaN` forward returns
+(no future prices available).
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+|:----------|:-----|:--------|:------------|
+| `prices` | `pd.DataFrame` | required | Cleaned prices with `ticker`, `Date`, `Close` |
+| `windows` | `list[int] \| None` | `[1, 5]` | List of trading-day windows to compute |
+
+**Returns**
+
+`pd.DataFrame` — copy of `prices` with one added column per window:
+`fwd_1d`, `fwd_5d`, etc. (percentage change, e.g. `0.012` = +1.2%).
+
+**Example**
+
+```python
+from etf_iv import load_price_history, compute_forward_returns
+
+prices  = load_price_history()
+returns = compute_forward_returns(prices, windows=[1, 5, 10])
+
+print(returns[["ticker", "Date", "Close", "fwd_1d", "fwd_5d", "fwd_10d"]].tail(10))
+
+# Check correlation between VOO 1-day returns and itself (sanity check)
+voo = returns[returns["ticker"] == "VOO"].dropna(subset=["fwd_1d"])
+print(voo[["fwd_1d", "fwd_5d"]].corr())
+```
+
+---
+
+## `compute_iv_skew()` {#compute_iv_skew}
+
+> Compute IV skew as median OTM put IV minus median ATM put IV for each ETF.
+
+Filters to put options within the specified DTE window, then computes
+the median implied volatility for ATM and OTM bands separately. The
+difference (`otm_iv - atm_iv`) is the skew — positive values mean OTM
+puts are priced higher than ATM puts (the typical "crash protection" premium).
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+|:----------|:-----|:--------|:------------|
+| `options` | `pd.DataFrame` | required | Cleaned options with `ticker`, `contractType`, `impliedVolatility`, `moneyness`, `dte` |
+| `dte_range` | `tuple[int, int]` | `(15, 60)` | `(min_dte, max_dte)` — inclusive DTE window for puts |
+| `atm_range` | `tuple[float, float]` | `(0.97, 1.03)` | `(lo, hi)` moneyness band for ATM puts |
+| `otm_range` | `tuple[float, float]` | `(0.85, 0.97)` | `(lo, hi)` moneyness band for OTM puts |
+
+**Returns**
+
+`pd.DataFrame` indexed by `ticker`:
+
+| Column | Type | Description |
+|:-------|:-----|:------------|
+| `atm_iv` | `float` | Median implied volatility of ATM puts |
+| `otm_iv` | `float` | Median implied volatility of OTM puts |
+| `iv_skew` | `float` | `otm_iv - atm_iv` (positive = typical skew) |
+| `n_atm` | `int` | Number of ATM put contracts in the DTE window |
+| `n_otm` | `int` | Number of OTM put contracts in the DTE window |
+
+**Example**
+
+```python
+from etf_iv import load_options_filtered, compute_iv_skew
+
+options = load_options_filtered()
+skew    = compute_iv_skew(options)
+
+print(skew)
+#         atm_iv    otm_iv  iv_skew  n_atm  n_otm
+# ticker
+# ARKQ    0.2345    0.3456   0.1111     12     28
+# BOTZ    0.1987    0.2876   0.0889      8     19
+# QQQ     0.1654    0.2345   0.0691     45    112
+# VOO     0.1432    0.2123   0.0691     38     97
+
+# Wider OTM band
+deep_skew = compute_iv_skew(options, otm_range=(0.75, 0.95))
+print(deep_skew[["atm_iv", "otm_iv", "iv_skew"]])
+```
+
+::: {.callout-note}
+A persistently positive `iv_skew` (OTM puts priced above ATM puts) is
+well-documented and reflects the market's demand for downside crash protection.
+Thematic ETFs (ARKQ, BOTZ) tend to show steeper skew due to higher idiosyncratic
+risk and lower liquidity in their options markets.
+:::
+
+---
+
+## `compute_earnings_proximity()` {#compute_earnings_proximity}
+
+> Compute a weight-normalized "days until earnings" metric for each ETF.
+
+For each ETF, takes the top-N holdings by weight, looks up their next
+earnings dates, and computes a weighted average of days-to-earnings.
+Also reports the fraction of holdings reporting within 30 and 60 days.
+
+**Parameters**
+
+| Parameter | Type | Default | Description |
+|:----------|:-----|:--------|:------------|
+| `holdings` | `pd.DataFrame` | required | Cleaned holdings with `holding_ticker`, `etf_ticker`, `weight_pct` |
+| `earnings` | `pd.DataFrame` | required | Cleaned earnings with `holding_ticker`, `etf_ticker`, `earnings_date` |
+| `today` | `pd.Timestamp \| None` | `None` | Reference date; defaults to `pd.Timestamp.today()` |
+| `top_n` | `int` | `10` | Number of largest holdings (by weight) per ETF to include |
+
+**Returns**
+
+`pd.DataFrame` indexed by `ticker` (ETF symbol):
+
+| Column | Type | Description |
+|:-------|:-----|:------------|
+| `weighted_dte_earnings` | `float` | Weight-normalized days until next earnings |
+| `pct_within_30d` | `float` | Fraction of top-N holdings reporting within 30 days |
+| `pct_within_60d` | `float` | Fraction of top-N holdings reporting within 60 days |
+| `n_holdings_with_dates` | `int` | Holdings with a valid earnings date |
+
+**Example**
+
+```python
+from etf_iv import (
+    load_etf_holdings, load_earnings_dates,
+    compute_earnings_proximity,
+)
+import pandas as pd
+
+holdings = load_etf_holdings()
+earnings = load_earnings_dates()
+
+proximity = compute_earnings_proximity(holdings, earnings, top_n=10)
+print(proximity.sort_values("weighted_dte_earnings"))
+#         weighted_dte_earnings  pct_within_30d  pct_within_60d  n_holdings_with_dates
+# ticker
+# ARKQ                     23.5            0.40            0.80                      9
+# BOTZ                     31.2            0.30            0.60                      8
+# QQQ                      45.8            0.20            0.50                     10
+# VOO                      52.1            0.15            0.40                     10
+
+# Use a fixed reference date for reproducible results
+proximity_fixed = compute_earnings_proximity(
+    holdings, earnings, today=pd.Timestamp("2025-04-01"), top_n=10
+)
+```
+
+::: {.callout-tip}
+Combine this with `compute_iv_skew()` to test the "earnings fear" hypothesis:
+ETFs whose top holdings have nearer upcoming earnings should, in theory,
+show steeper IV skew as the market prices in event risk.
+:::

@@ -1,0 +1,84 @@
+---
+title: "API Reference"
+subtitle: "All 21 public functions in the `etf_iv` package"
+---
+
+The `etf_iv` package exposes 21 functions organized into four modules.
+Every function accepts and returns `pd.DataFrame` objects and raises
+`ValueError` on invalid input.
+
+```python
+import etf_iv
+# or import individual functions:
+from etf_iv import load_price_history, compute_iv_skew
+```
+
+---
+
+## Bundled Loaders
+
+Load pre-collected CSV data bundled with the package. Works completely
+offline — no network access or API keys required.
+
+[Full reference →](loaders.qmd)
+
+| Function | Returns | Description |
+|:---------|:--------|:------------|
+| [`load_price_history()`](loaders.qmd#load_price_history) | `DataFrame` | 6-month OHLCV for VOO, QQQ, ARKQ, BOTZ |
+| [`load_options_chain()`](loaders.qmd#load_options_chain) | `DataFrame` | Full options chain (all expirations, cleaned) |
+| [`load_options_filtered()`](loaders.qmd#load_options_filtered) | `DataFrame` | Liquidity-filtered options with spot and moneyness |
+| [`load_etf_holdings()`](loaders.qmd#load_etf_holdings) | `DataFrame` | Top-25 holdings per ETF |
+| [`load_earnings_dates()`](loaders.qmd#load_earnings_dates) | `DataFrame` | Next earnings dates for ETF holdings |
+| [`load_etf_sentiment()`](loaders.qmd#load_etf_sentiment) | `DataFrame` | Claude-scored news sentiment (1–5 scale) |
+
+---
+
+## Live Collection
+
+Fetch fresh data from yfinance, stockanalysis.com, or the Anthropic API.
+Requires network access; sentiment functions additionally require
+`ANTHROPIC_API_KEY`.
+
+[Full reference →](collection.qmd)
+
+| Function | Returns | Description |
+|:---------|:--------|:------------|
+| [`get_price_history(ticker, period)`](collection.qmd#get_price_history) | `DataFrame` | Download OHLCV for a single ticker |
+| [`get_options_chain(ticker)`](collection.qmd#get_options_chain) | `DataFrame` | Fetch all listed options across every expiration |
+| [`get_etf_holdings(ticker)`](collection.qmd#get_etf_holdings) | `DataFrame` | Scrape top holdings and weights |
+| [`get_etf_headlines(ticker, max_articles)`](collection.qmd#get_etf_headlines) | `list[str]` | Fetch recent news headlines via yfinance |
+| [`get_sentiment_score(ticker, headlines)`](collection.qmd#get_sentiment_score) | `int` | Score headlines 1–5 with Claude tool use |
+
+---
+
+## Cleaning
+
+Standardize, filter, and enrich raw DataFrames before analysis. All
+functions return a cleaned copy without mutating the input.
+
+[Full reference →](cleaning.qmd)
+
+| Function | Returns | Description |
+|:---------|:--------|:------------|
+| [`clean_prices(df)`](cleaning.qmd#clean_prices) | `DataFrame` | Standardize raw price-history DataFrame |
+| [`clean_options(df)`](cleaning.qmd#clean_options) | `DataFrame` | Standardize raw options chain |
+| [`filter_liquidity(df, min_volume, min_open_interest)`](cleaning.qmd#filter_liquidity) | `DataFrame` | Remove illiquid option contracts |
+| [`add_spot_and_moneyness(options, prices)`](cleaning.qmd#add_spot_and_moneyness) | `DataFrame` | Merge spot price; compute moneyness and DTE |
+| [`clean_holdings(df)`](cleaning.qmd#clean_holdings) | `DataFrame` | Normalize holdings column names and types |
+| [`clean_earnings(df)`](cleaning.qmd#clean_earnings) | `DataFrame` | Parse and filter earnings dates |
+
+---
+
+## Analysis
+
+Compute derived metrics from cleaned DataFrames. No raw fetching or
+cleaning — pass cleaned DataFrames from the loaders or cleaning module.
+
+[Full reference →](analysis.qmd)
+
+| Function | Returns | Description |
+|:---------|:--------|:------------|
+| [`compute_put_call_ratios(options)`](analysis.qmd#compute_put_call_ratios) | `tuple[DataFrame, DataFrame]` | PCR by ticker and by ticker-expiration |
+| [`compute_forward_returns(prices, windows)`](analysis.qmd#compute_forward_returns) | `DataFrame` | Add N-day forward return columns |
+| [`compute_iv_skew(options, dte_range, atm_range, otm_range)`](analysis.qmd#compute_iv_skew) | `DataFrame` | IV skew = OTM put IV − ATM put IV |
+| [`compute_earnings_proximity(holdings, earnings, today, top_n)`](analysis.qmd#compute_earnings_proximity) | `DataFrame` | Weight-normalized days until earnings |

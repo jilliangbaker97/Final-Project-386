@@ -1,0 +1,100 @@
+---
+title: "ETF Implied Volatility, Options Sentiment & Earnings Analysis"
+subtitle: "STAT 386 Final Project — Jillian Baker"
+page-layout: full
+toc: false
+---
+
+This project builds a custom dataset by combining ETF options chains, price
+histories, top-fund holdings, earnings calendars, and AI-scored news sentiment
+for four ETFs spanning different investment styles: **VOO**, **QQQ**,
+**ARKQ**, and **BOTZ**.
+
+Two research questions drive the analysis:
+
+1. **Do extreme put/call ratios predict short-term forward returns?**
+2. **Does implied-volatility skew correlate with earnings proximity of top holdings?**
+
+---
+
+## Deliverables
+
+:::: {.columns}
+
+::: {.column width="50%"}
+
+### Documentation & Analysis
+
+| | |
+|:---|:---|
+| [Reference](reference/index.qmd) | API docs for all 21 package functions |
+| [Tutorial](tutorial.qmd) | Install → load data → analyze → visualize |
+| [Technical Report](report.md) | Methodology, findings, and limitations |
+| [Full Notebook](analysis.html) | 9-section Jupyter notebook with visualizations |
+
+:::
+
+::: {.column width="50%"}
+
+### Project Links
+
+| | |
+|:---|:---|
+| [Streamlit App](https://final-project-386.streamlit.app) | Interactive dashboard (live) |
+| [GitHub Repository](https://github.com/jilliangbaker97/Final-Project-386) | Source code and data |
+
+:::
+
+::::
+
+---
+
+## The `etf_iv` Package
+
+The `etf_iv` Python package exposes **21 functions** across four categories.
+All collected data is bundled as CSV files so the full analysis runs
+offline — no network access or API keys required.
+
+```bash
+pip install -e .
+```
+
+```python
+from etf_iv import load_options_filtered, compute_iv_skew
+
+options = load_options_filtered()   # loads bundled data instantly
+skew    = compute_iv_skew(options)
+print(skew[["atm_iv", "otm_iv", "iv_skew"]])
+```
+
+### Function categories
+
+| Category | Count | Description |
+|:---------|:-----:|:------------|
+| [Bundled Loaders](reference/loaders.qmd) | 6 | Load pre-collected CSV data with no network access |
+| [Live Collection](reference/collection.qmd) | 5 | Fetch fresh data from yfinance and Anthropic |
+| [Cleaning](reference/cleaning.qmd) | 6 | Standardize, filter, and enrich raw DataFrames |
+| [Analysis](reference/analysis.qmd) | 4 | Compute PCR, IV skew, forward returns, earnings proximity |
+
+---
+
+## Data Sources
+
+- **[yfinance](https://github.com/ranaroussi/yfinance)** — 6-month OHLCV price history and full options chains
+- **[stockanalysis.com](https://stockanalysis.com)** — Top-25 holdings and next earnings dates (scraped with robots.txt compliance)
+- **[Anthropic Claude API](https://www.anthropic.com)** — AI-scored news sentiment on a 1–5 scale
+
+---
+
+## Key Findings
+
+- Broad-market ETFs (VOO, QQQ) carry structurally high put/call ratios from
+  institutional hedging, making raw PCR a poor standalone directional signal.
+- IV skew is persistently positive across all four ETFs, consistent with
+  sustained demand for crash protection.
+- ETFs whose top holdings have nearer earnings tend to show steeper IV skews,
+  offering directional support for the "earnings fear" hypothesis.
+
+---
+
+*Built with Python, yfinance, Streamlit, and the Anthropic Claude API.*

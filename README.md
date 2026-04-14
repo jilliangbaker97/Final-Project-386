@@ -3,6 +3,17 @@
 **STAT 386 Final Project** — Jillian Baker
 
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://final-project-386.streamlit.app)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://jilliangbaker97.github.io/Final-Project-386/)
+
+## Documentation
+
+Full API reference, tutorial, and project report are published at:
+
+**<https://jilliangbaker97.github.io/Final-Project-386/>**
+
+- [API Reference](https://jilliangbaker97.github.io/Final-Project-386/reference/index.html) — all 21 public functions documented
+- [Tutorial](https://jilliangbaker97.github.io/Final-Project-386/tutorial.html) — install → load → analyze → visualize
+- [Technical Report](https://jilliangbaker97.github.io/Final-Project-386/report.html)
 
 ## Project Description
 

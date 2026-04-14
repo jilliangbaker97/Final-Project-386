@@ -1,0 +1,54 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "etf-iv"
+  description: "ETF options, implied volatility, and earnings analysis toolkit"
+  site-url: "https://jilliangbaker97.github.io/Final-Project-386"
+  repo-url: "https://github.com/jilliangbaker97/Final-Project-386"
+  repo-actions: [issue]
+
+  navbar:
+    left:
+      - text: "Home"
+        file: index.qmd
+      - text: "Reference"
+        menu:
+          - text: "Overview"
+            file: reference/index.qmd
+          - text: "---"
+          - text: "Bundled Loaders"
+            file: reference/loaders.qmd
+          - text: "Live Collection"
+            file: reference/collection.qmd
+          - text: "Cleaning"
+            file: reference/cleaning.qmd
+          - text: "Analysis"
+            file: reference/analysis.qmd
+      - text: "Tutorial"
+        file: tutorial.qmd
+      - text: "Report"
+        file: report.md
+    right:
+      - icon: github
+        href: "https://github.com/jilliangbaker97/Final-Project-386"
+        aria-label: GitHub
+
+  page-footer:
+    left: "STAT 386 Final Project — Jillian Baker"
+    right:
+      - text: "GitHub"
+        href: "https://github.com/jilliangbaker97/Final-Project-386"
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    code-copy: true
+    code-overflow: wrap
+
+resources:
+  - "analysis.html"
+  - "api/"
