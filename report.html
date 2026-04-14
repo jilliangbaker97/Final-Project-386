@@ -202,6 +202,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#putcall-ratio" id="toc-putcall-ratio" class="nav-link" data-scroll-target="#putcall-ratio">Put/Call Ratio</a></li>
   <li><a href="#iv-skew" id="toc-iv-skew" class="nav-link" data-scroll-target="#iv-skew">IV Skew</a></li>
+  <li><a href="#news-sentiment" id="toc-news-sentiment" class="nav-link" data-scroll-target="#news-sentiment">News Sentiment</a></li>
   </ul></li>
   <li><a href="#limitations" id="toc-limitations" class="nav-link" data-scroll-target="#limitations">Limitations</a></li>
   <li><a href="#reproducibility" id="toc-reproducibility" class="nav-link" data-scroll-target="#reproducibility">Reproducibility</a></li>
@@ -300,6 +301,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="iv-skew">IV Skew</h3>
 <p>IV skew was persistently positive across all four ETFs, meaning OTM puts were consistently priced above ATM puts. This is consistent with well-documented demand for crash protection in equity options markets.</p>
 <p>The cross-sectional comparison of IV skew against weighted days-to-earnings provided directional support for the “earnings fear” hypothesis — ETFs whose top holdings report sooner tend to show steeper skews. However, with only four data points this relationship cannot be established statistically. A stronger test would require daily IV snapshots tracked across the earnings window for each holding.</p>
+</section>
+<section id="news-sentiment" class="level3">
+<h3 class="anchored" data-anchor-id="news-sentiment">News Sentiment</h3>
+<p>ETF news sentiment was scored on a 1–5 scale using the Anthropic Claude API with structured tool-use output. At the time of data collection, yfinance returned no headlines for any of the four ETFs, resulting in all four tickers defaulting to a neutral score of 3. As a result, sentiment could not be used as a meaningful signal in this analysis. In a future iteration, sentiment scores collected during periods of active news coverage could be incorporated as an additional feature alongside PCR and IV skew.</p>
 <hr>
 </section>
 </section>
