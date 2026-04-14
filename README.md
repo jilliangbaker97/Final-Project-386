@@ -1,6 +1,6 @@
 # ETF Implied Volatility, Options Sentiment & Earnings Analysis
 
-**STAT 386 Final Project** — Jillian Baker
+**STAT 386 Final Project** — Jillian Baker & Golden Huang
 
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://final-project-386.streamlit.app)
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://jilliangbaker97.github.io/Final-Project-386/)

@@ -1,6 +1,6 @@
 ---
 title: "ETF Implied Volatility, Options Sentiment & Earnings Analysis"
-subtitle: "STAT 386 Final Project — Jillian Baker"
+subtitle: "STAT 386 Final Project — Jillian Baker & Golden Huang"
 page-layout: full
 toc: false
 ---

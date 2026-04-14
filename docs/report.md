@@ -1,6 +1,6 @@
 # Technical Report: ETF Implied Volatility, Options Sentiment & Earnings Analysis
 
-**STAT 386 Final Project** — Jillian Baker
+**STAT 386 Final Project** — Jillian Baker & Golden Huang
 
 ---
 

@@ -36,7 +36,7 @@ website:
         aria-label: GitHub
 
   page-footer:
-    left: "STAT 386 Final Project — Jillian Baker"
+    left: "STAT 386 Final Project — Jillian Baker & Golden Huang"
     right:
       - text: "GitHub"
         href: "https://github.com/jilliangbaker97/Final-Project-386"
