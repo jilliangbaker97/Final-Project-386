@@ -169,10 +169,12 @@ for i, ticker in enumerate(selected):
 
         sent_row = sentiment[sentiment["etf_ticker"] == ticker]
         sent_label = sent_row["sentiment_label"].iloc[0] if len(sent_row) > 0 else "N/A"
+        num_articles = int(sent_row["num_articles"].iloc[0]) if len(sent_row) > 0 else 0
 
         st.metric(label=f"{ticker} Spot", value=spot_val)
         st.metric(label="PCR (OI)", value=pcr_val)
         st.metric(label="Sentiment", value=sent_label)
+        st.caption(f"Based on {num_articles} article{'s' if num_articles != 1 else ''}")
 
 # ---------------------------------------------------------------------------
 # Tabs
