@@ -134,17 +134,11 @@ window for each holding.
 
 ### News Sentiment
 
-ETF news sentiment was scored on a 1–5 scale using the Anthropic Claude API 
-with structured tool-use output. At the time of data collection, yfinance 
-returned no headlines for any of the four ETFs, resulting in all four tickers 
-defaulting to a neutral score of 3. As a result, sentiment could not be used 
-as a meaningful signal in this analysis. In a future iteration, sentiment scores 
-collected during periods of active news coverage could be incorporated as an 
-additional feature alongside PCR and IV skew.
-
+VOO and ARKQ scored Positive (4/5) based on 10 and 4 articles respectively, while QQQ and BOTZ scored Neutral (3/5). All individual holdings scored Neutral regardless of their parent ETF's sentiment, suggesting that ETF-level headlines carry a more optimistic tone than the holding-level news environment. The small article count for ARKQ (4 articles) means its Positive score should be interpreted cautiously. 
 ---
 
 ## Limitations
+
 
 - **Single snapshot design** — yfinance provides a current options chain,
   not a historical time series of IV or PCR. This means we cannot observe
@@ -165,6 +159,7 @@ additional feature alongside PCR and IV skew.
   return-to-expiry was constant across observations, making Pearson and 
   Spearman correlations undefined. The expiration-bucketed analysis is 
   therefore directionally incomplete.
+-  **ARKQ's sentiment sample size** — ARKQ's sentiment score is based on only 4 articles, making it less robust than the 10-article samples used for the other three ETFs.
 
 ---
 

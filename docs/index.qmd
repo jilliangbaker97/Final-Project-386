@@ -94,6 +94,7 @@ print(skew[["atm_iv", "otm_iv", "iv_skew"]])
   sustained demand for crash protection.
 - ETFs whose top holdings have nearer earnings tend to show steeper IV skews,
   offering directional support for the "earnings fear" hypothesis.
+- ETF-level news sentiment skewed slightly positive for VOO and ARKQ, while individual holdings scored uniformly neutral — suggesting headline-level optimism not yet reflected at the constituent level.
 
 ---
 
