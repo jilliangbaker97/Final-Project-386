@@ -135,6 +135,7 @@ window for each holding.
 ### News Sentiment
 
 VOO and ARKQ scored Positive (4/5) based on 10 and 4 articles respectively, while QQQ and BOTZ scored Neutral (3/5). All individual holdings scored Neutral regardless of their parent ETF's sentiment, suggesting that ETF-level headlines carry a more optimistic tone than the holding-level news environment. The small article count for ARKQ (4 articles) means its Positive score should be interpreted cautiously. 
+
 ---
 
 ## Limitations
