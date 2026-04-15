@@ -204,6 +204,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#iv-skew" id="toc-iv-skew" class="nav-link" data-scroll-target="#iv-skew">IV Skew</a></li>
   <li><a href="#news-sentiment" id="toc-news-sentiment" class="nav-link" data-scroll-target="#news-sentiment">News Sentiment</a></li>
   </ul></li>
+  <li><a href="#voo-and-arkq-scored-positive-45-based-on-10-and-4-articles-respectively-while-qqq-and-botz-scored-neutral-35.-all-individual-holdings-scored-neutral-regardless-of-their-parent-etfs-sentiment-suggesting-that-etf-level-headlines-carry-a-more-optimistic-tone-than-the-holding-level-news-environment.-the-small-article-count-for-arkq-4-articles-means-its-positive-score-should-be-interpreted-cautiously." id="toc-voo-and-arkq-scored-positive-45-based-on-10-and-4-articles-respectively-while-qqq-and-botz-scored-neutral-35.-all-individual-holdings-scored-neutral-regardless-of-their-parent-etfs-sentiment-suggesting-that-etf-level-headlines-carry-a-more-optimistic-tone-than-the-holding-level-news-environment.-the-small-article-count-for-arkq-4-articles-means-its-positive-score-should-be-interpreted-cautiously." class="nav-link" data-scroll-target="#voo-and-arkq-scored-positive-45-based-on-10-and-4-articles-respectively-while-qqq-and-botz-scored-neutral-35.-all-individual-holdings-scored-neutral-regardless-of-their-parent-etfs-sentiment-suggesting-that-etf-level-headlines-carry-a-more-optimistic-tone-than-the-holding-level-news-environment.-the-small-article-count-for-arkq-4-articles-means-its-positive-score-should-be-interpreted-cautiously.">VOO and ARKQ scored Positive (4/5) based on 10 and 4 articles respectively, while QQQ and BOTZ scored Neutral (3/5). All individual holdings scored Neutral regardless of their parent ETF’s sentiment, suggesting that ETF-level headlines carry a more optimistic tone than the holding-level news environment. The small article count for ARKQ (4 articles) means its Positive score should be interpreted cautiously.</a></li>
   <li><a href="#limitations" id="toc-limitations" class="nav-link" data-scroll-target="#limitations">Limitations</a></li>
   <li><a href="#reproducibility" id="toc-reproducibility" class="nav-link" data-scroll-target="#reproducibility">Reproducibility</a></li>
   <li><a href="#links" id="toc-links" class="nav-link" data-scroll-target="#links">Links</a></li>
@@ -304,9 +305,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="news-sentiment" class="level3">
 <h3 class="anchored" data-anchor-id="news-sentiment">News Sentiment</h3>
-<p>ETF news sentiment was scored on a 1–5 scale using the Anthropic Claude API with structured tool-use output. At the time of data collection, yfinance returned no headlines for any of the four ETFs, resulting in all four tickers defaulting to a neutral score of 3. As a result, sentiment could not be used as a meaningful signal in this analysis. In a future iteration, sentiment scores collected during periods of active news coverage could be incorporated as an additional feature alongside PCR and IV skew.</p>
-<hr>
 </section>
+</section>
+<section id="voo-and-arkq-scored-positive-45-based-on-10-and-4-articles-respectively-while-qqq-and-botz-scored-neutral-35.-all-individual-holdings-scored-neutral-regardless-of-their-parent-etfs-sentiment-suggesting-that-etf-level-headlines-carry-a-more-optimistic-tone-than-the-holding-level-news-environment.-the-small-article-count-for-arkq-4-articles-means-its-positive-score-should-be-interpreted-cautiously." class="level2">
+<h2 class="anchored" data-anchor-id="voo-and-arkq-scored-positive-45-based-on-10-and-4-articles-respectively-while-qqq-and-botz-scored-neutral-35.-all-individual-holdings-scored-neutral-regardless-of-their-parent-etfs-sentiment-suggesting-that-etf-level-headlines-carry-a-more-optimistic-tone-than-the-holding-level-news-environment.-the-small-article-count-for-arkq-4-articles-means-its-positive-score-should-be-interpreted-cautiously.">VOO and ARKQ scored Positive (4/5) based on 10 and 4 articles respectively, while QQQ and BOTZ scored Neutral (3/5). All individual holdings scored Neutral regardless of their parent ETF’s sentiment, suggesting that ETF-level headlines carry a more optimistic tone than the holding-level news environment. The small article count for ARKQ (4 articles) means its Positive score should be interpreted cautiously.</h2>
 </section>
 <section id="limitations" class="level2">
 <h2 class="anchored" data-anchor-id="limitations">Limitations</h2>
@@ -317,6 +319,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Confounding factors</strong> — ETFs differ in sector composition, average market cap, liquidity, and recent volatility, all of which affect options pricing independently of earnings proximity or sentiment.</li>
 <li><strong>Insufficient ATM contracts for thematic ETFs</strong> — ARKQ and BOTZ had no put contracts within the ATM moneyness band [0.97, 1.03] in the 15–60 DTE window, making IV skew uncomputable for these tickers. The cross-sectional IV skew comparison is therefore limited to QQQ and VOO only.</li>
 <li><strong>Expiration-bucketed correlations undefined</strong> — Because all option expirations extend beyond the 6-month price history window, return-to-expiry was constant across observations, making Pearson and Spearman correlations undefined. The expiration-bucketed analysis is therefore directionally incomplete.</li>
+<li><strong>ARKQ’s sentiment sample size</strong> — ARKQ’s sentiment score is based on only 4 articles, making it less robust than the 10-article samples used for the other three ETFs.</li>
 </ul>
 <hr>
 </section>
