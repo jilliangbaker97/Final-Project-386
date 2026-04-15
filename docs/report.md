@@ -14,12 +14,12 @@ skew**. This project asks whether those signals contain meaningful
 information about future returns and earnings risk for four ETFs that span
 different investment styles:
 
-| ETF | Focus |
-|-----|-------|
-| VOO | S&P 500 broad market |
-| QQQ | Nasdaq-100 large-cap tech |
+| ETF  | Focus                                        |
+| ---- | -------------------------------------------- |
+| VOO  | S&P 500 broad market                         |
+| QQQ  | Nasdaq-100 large-cap tech                    |
 | ARKQ | ARK autonomous & robotics (actively managed) |
-| BOTZ | Global X robotics & AI (index-based) |
+| BOTZ | Global X robotics & AI (index-based)         |
 
 Two research questions guided the analysis:
 
@@ -132,6 +132,16 @@ only four data points this relationship cannot be established statistically.
 A stronger test would require daily IV snapshots tracked across the earnings
 window for each holding.
 
+### News Sentiment
+
+ETF news sentiment was scored on a 1–5 scale using the Anthropic Claude API 
+with structured tool-use output. At the time of data collection, yfinance 
+returned no headlines for any of the four ETFs, resulting in all four tickers 
+defaulting to a neutral score of 3. As a result, sentiment could not be used 
+as a meaningful signal in this analysis. In a future iteration, sentiment scores 
+collected during periods of active news coverage could be incorporated as an 
+additional feature alongside PCR and IV skew.
+
 ---
 
 ## Limitations
@@ -146,6 +156,15 @@ window for each holding.
 - **Confounding factors** — ETFs differ in sector composition, average
   market cap, liquidity, and recent volatility, all of which affect options
   pricing independently of earnings proximity or sentiment.
+- **Insufficient ATM contracts for thematic ETFs** — ARKQ and BOTZ had no 
+  put contracts within the ATM moneyness band [0.97, 1.03] in the 15–60 DTE 
+  window, making IV skew uncomputable for these tickers. The cross-sectional 
+  IV skew comparison is therefore limited to QQQ and VOO only.
+- **Expiration-bucketed correlations undefined** — Because all option 
+  expirations extend beyond the 6-month price history window, 
+  return-to-expiry was constant across observations, making Pearson and 
+  Spearman correlations undefined. The expiration-bucketed analysis is 
+  therefore directionally incomplete.
 
 ---
 
@@ -161,7 +180,7 @@ pip install -r requirements.txt && pip install -e .
 jupyter notebook final_project.ipynb
 ```
 
-See the [Tutorial](tutorial.md) for full setup instructions and the
+See the [Tutorial](tutorial.html) for full setup instructions and the
 [API Documentation](api/etf_iv.html) for function references.
 
 ---
@@ -170,5 +189,5 @@ See the [Tutorial](tutorial.md) for full setup instructions and the
 
 - [Streamlit App](https://final-project-386.streamlit.app)
 - [GitHub Repository](https://github.com/jilliangbaker97/Final-Project-386)
-- [Tutorial](tutorial.md)
-- [API Documentation](api/etf_iv.html)
+- [Tutorial](https://jilliangbaker97.github.io/Final-Project-386/tutorial.html)
+- [API Documentation](https://jilliangbaker97.github.io/Final-Project-386/reference/index.html)
