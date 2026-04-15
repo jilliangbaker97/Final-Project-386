@@ -139,27 +139,13 @@ VOO and ARKQ scored Positive (4/5) based on 10 and 4 articles respectively, whil
 
 ## Limitations
 
-
-- **Single snapshot design** — yfinance provides a current options chain,
-  not a historical time series of IV or PCR. This means we cannot observe
-  how these signals evolved before past price moves.
-- **Small cross-sectional n** — With only four ETFs, all correlations are
-  illustrative rather than statistically conclusive.
-- **Holdings staleness** — ETF holdings are scraped at a single point in
-  time and may not reflect intraday rebalancing.
-- **Confounding factors** — ETFs differ in sector composition, average
-  market cap, liquidity, and recent volatility, all of which affect options
-  pricing independently of earnings proximity or sentiment.
-- **Insufficient ATM contracts for thematic ETFs** — ARKQ and BOTZ had no 
-  put contracts within the ATM moneyness band [0.97, 1.03] in the 15–60 DTE 
-  window, making IV skew uncomputable for these tickers. The cross-sectional 
-  IV skew comparison is therefore limited to QQQ and VOO only.
-- **Expiration-bucketed correlations undefined** — Because all option 
-  expirations extend beyond the 6-month price history window, 
-  return-to-expiry was constant across observations, making Pearson and 
-  Spearman correlations undefined. The expiration-bucketed analysis is 
-  therefore directionally incomplete.
--  **ARKQ's sentiment sample size** — ARKQ's sentiment score is based on only 4 articles, making it less robust than the 10-article samples used for the other three ETFs.
+- **Single snapshot design** — yfinance provides a current options chain, not a historical time series of IV or PCR. This means we cannot observe how these signals evolved before past price moves.
+- **Small cross-sectional n** — With only four ETFs, all correlations are illustrative rather than statistically conclusive.
+- **Holdings staleness** — ETF holdings are scraped at a single point in time and may not reflect intraday rebalancing.
+- **Confounding factors** — ETFs differ in sector composition, average market cap, liquidity, and recent volatility, all of which affect options pricing independently of earnings proximity or sentiment.
+- **Insufficient ATM contracts for thematic ETFs** — ARKQ and BOTZ had no put contracts within the ATM moneyness band [0.97, 1.03] in the 15–60 DTE window, making IV skew uncomputable for these tickers. The cross-sectional IV skew comparison is therefore limited to QQQ and VOO only.
+- **Expiration-bucketed correlations undefined** — Because all option expirations extend beyond the 6-month price history window, return-to-expiry was constant across observations, making Pearson and Spearman correlations undefined. The expiration-bucketed analysis is therefore directionally incomplete.
+- **ARKQ sentiment sample size** — ARKQ's sentiment score is based on only 4 articles, making it less robust than the 10-article samples used for the other three ETFs.
 
 ---
 
